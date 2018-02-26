@@ -1,8 +1,6 @@
 const moment = require('moment');
 
-module.exports = function (logger, metrics, connection) {
-    return { fetchFromJsonApi };
-
+module.exports = (logger, metrics, connection) => {
     async function fetchFromJsonApi(apiPath, qsObj, transactionId) {
         const startTime = moment();
 
@@ -32,7 +30,8 @@ module.exports = function (logger, metrics, connection) {
                         'FetchFromRemote.fetchFromJsonApi.failed',
                         { message: `invalid response from sports API ${response}`, transactionId },
                     );
-                    return Promise.reject('invalid response from sports API');
+
+                    return Promise.reject(new Error('invalid response from sports API'));
                 }
 
                 try {
@@ -53,4 +52,6 @@ module.exports = function (logger, metrics, connection) {
                 return Promise.reject(err);
             });
     }
+
+    return { fetchFromJsonApi };
 };

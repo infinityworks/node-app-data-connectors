@@ -1,8 +1,6 @@
 const requestPromise = require('request-promise');
 
-module.exports = function (logger, metrics, host, port, protocol) {
-    return { get };
-
+module.exports = (logger, metrics, host, port, protocol) => {
     function get(path, qs, transactionId) {
         const requestParams = {
             uri: `${protocol}://${host}:${port}/${path}`,
@@ -28,4 +26,6 @@ module.exports = function (logger, metrics, host, port, protocol) {
                 return Promise.reject(err);
             });
     }
+
+    return { get };
 };

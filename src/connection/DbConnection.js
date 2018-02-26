@@ -1,3 +1,5 @@
+/* eslint no-param-reassign: 1 */
+
 const mysql = require('mysql');
 
 module.exports = (
@@ -23,13 +25,38 @@ module.exports = (
         port,
     });
 
+    function releaseConnection(connection) {
+        connection.release();
+
+        logger.info('connector.DBConnection.releaseConnection', {
+            message: 'db connection dropped',
+        });
+    }
+
+    function newConnection() {
+        return new Promise((resolve, reject) => {
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    logger.error('connector.DBConnection.newConnection', err);
+                    return reject(err);
+                }
+
+                logger.info('connector.DBConnection.newConnection', {
+                    message: 'new db connection sourced from pool',
+                });
+
+                return resolve(connection);
+            });
+        });
+    }
+
     function bindParamLabels(sql, values) {
         if (!values) {
             return sql;
         }
 
         return sql.replace(/:(\w+)/g, (txt, key) => {
-            if (values.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(values, key)) {
                 return mysql.escape(values[key]);
             }
 
@@ -37,37 +64,34 @@ module.exports = (
         });
     }
 
-    function query(query){
-
+    function query(sql) {
         return new Promise((resolve, reject) => {
-
             newConnection()
-                .then(connection => {
-                    connection.query(query, (err, rows) => {
-                        if(err) {
-                            logger.error('connector.DBConnection.query', err);
+                .then((connection) => {
+                    connection.query(sql, (err, rows) => {
+                        if (err) {
+                            logger.error('connector.DBConnection.sql', err);
                             return reject(err);
                         }
                         releaseConnection(connection);
                         return resolve(rows);
                     });
                 })
-                .catch(err => {
-                    logger.error('connector.DBConnection.query', err);
+                .catch((err) => {
+                    logger.error('connector.DBConnection.sql', err);
                     reject(err);
                 });
-
         });
     }
 
     function multiStmtQuery(sql, values) {
         return new Promise((resolve, reject) => {
             newConnection()
-                .then(connection => {
+                .then((connection) => {
                     connection.config.queryFormat = bindParamLabels;
                     const queries = values.reduce((acc, row) => acc + connection.format(sql, row), '');
                     connection.query(queries, (err, rows) => {
-                        if(err) {
+                        if (err) {
                             logger.error('connector.DBConnection.multiStmtQuery', { message: err });
                             return reject(err);
                         }
@@ -75,7 +99,7 @@ module.exports = (
                         return resolve(rows);
                     });
                 })
-                .catch(err => {
+                .catch((err) => {
                     logger.error('connector.DBConnection.multiStmtQuery', { message: err });
                     reject(err);
                 });
@@ -83,13 +107,12 @@ module.exports = (
     }
 
     // TODO -- Use transactions? connection.beginTransaction ...
-    function bulkInsert(query, values) {
-
+    function bulkInsert(sql, values) {
         return new Promise((resolve, reject) => {
             newConnection()
-                .then(connection => {
-                    connection.query(query, [values], (err) => {
-                        if(err) {
+                .then((connection) => {
+                    connection.query(sql, [values], (err) => {
+                        if (err) {
                             logger.error('connector.DbConnection.bulkInsert', err);
                             return reject(err);
                         }
@@ -97,36 +120,10 @@ module.exports = (
                         return resolve(true);
                     });
                 })
-                .catch(err => {
+                .catch((err) => {
                     logger.error('connector.DbConnection.bulkInsert', err);
                     reject(err);
                 });
-
-        });
-    }
-
-    function releaseConnection(connection) {
-        connection.release();
-
-        logger.info('connector.DBConnection.releaseConnection', {
-            message: 'db connection dropped'
-        });
-    }
-
-    function newConnection() {
-        return new Promise((resolve, reject) => {
-            pool.getConnection((err, connection) => {
-                if(err){
-                    logger.error('connector.DBConnection.newConnection', err);
-                    return reject(err);
-                }
-
-                logger.info('connector.DBConnection.newConnection', {
-                    message: 'new db connection sourced from pool'
-                });
-
-                return resolve(connection);
-            });
         });
     }
 
