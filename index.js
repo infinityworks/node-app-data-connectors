@@ -1,19 +1,33 @@
+const ApiConnection = require('./src/connection/ApiConnection');
+const DbConnection = require('./src/connection/DbConnection');
+const JsonApiFetch = require('./src/source/JsonApiFetch');
+
 module.exports = (logger, metrics) => {
-    const sportsApiConnection = () => {
-        require('./lib/ApiConnection')(logger, metrics, config.get('SPORTSAPI_HOST'), config.get('SPORTSAPI_PORT'), config.get('SPORTSAPI_PROTOCOL'));
-    };
-    const dbConnector = () => { 
-        require('./lib/DbConnection')(
+    const apiConnection = (host, port, protocol) =>
+        ApiConnection(
             logger,
             metrics,
-            config.get('DB_HOST'),
-            config.get('DB_PORT'),
-            config.get('DB_USERNAME'),
-            config.get('DB_PASSWORD'),
-            config.get('DB_NAME'),
+            host,
+            port,
+            protocol,
         );
-    };
-    const sportsApiFetcher = () => {
-        require('./lib/source/jsonApiFetch')(logger, metrics, sportsApiConnection);
+
+    const dbConnection = (host, port, username, password, dbName) =>
+        DbConnection(
+            logger,
+            metrics,
+            host,
+            port,
+            username,
+            password,
+            dbName,
+        );
+
+    const jsonApiFetch = (apiConn => JsonApiFetch(logger, metrics, apiConn));
+
+    return {
+        apiConnection,
+        dbConnection,
+        jsonApiFetch,
     };
 };
