@@ -1,0 +1,35 @@
+{
+  "name": "node-app-data-connectors",
+  "version": "0.1.0",
+  "description": "Collection of libraries to provide an easy interface to common data sources",
+  "main": "index.js",
+  "dependencies": {
+    "node-app-base": "^0.4.10",
+    "moment": "^2.20.1",
+    "mysql": "^2.15.0",
+    "request-promise": "^4.2.2"
+  },
+  "devDependencies": {
+    "eslint": "^4.17.0",
+    "babel-eslint": "^8.2.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.6.1",
+    "mocha": "^5.0.0",
+    "sinon": "^4.2.2",
+    "nyc": "^11.4.1"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "nyc mocha test/*.js test/**/*.js",
+    "lint": "eslint .",
+    "lint-fix": "eslint --fix .",
+    "lint-fix-dry-run": "eslint --fix-dry-run .",
+    "coverage": "nyc report --reporter=lcov _mocha test/app.test.js"
+  },
+  "author": "Infinity Works Consulting",
+  "license": "ISC"
+}
+
