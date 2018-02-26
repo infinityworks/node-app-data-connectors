@@ -23,13 +23,10 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "nyc mocha test/*.js test/**/*.js",
-    "lint": "eslint .",
-    "lint-fix": "eslint --fix .",
-    "lint-fix-dry-run": "eslint --fix-dry-run .",
-    "coverage": "nyc report --reporter=lcov _mocha test/app.test.js"
+    "lint": "eslint ./src",
+    "lint-fix": "eslint --fix ./src",
+    "lint-fix-dry-run": "eslint --fix-dry-run ./src"
   },
   "author": "Infinity Works Consulting",
   "license": "ISC"
 }
-
