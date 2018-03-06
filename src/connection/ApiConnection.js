@@ -1,6 +1,6 @@
 const requestPromise = require('request-promise');
 
-module.exports = (logger, metrics, host, port, protocol) => {
+module.exports = (logger, metrics, timers, host, port, protocol) => {
     function get(path, qs, transactionId) {
         const requestParams = {
             uri: `${protocol}://${host}:${port}/${path}`,
@@ -15,7 +15,16 @@ module.exports = (logger, metrics, host, port, protocol) => {
             qs,
         };
 
+        const startToken = timers.start();
+
         return requestPromise(requestParams)
+            .then((data) => {
+                const duration = timers.stop(startToken);
+                logger.info('lib.ApiConnection.query.done', {
+                    duration,
+                });
+                return data;
+            })
             .catch((err) => {
                 logger.info('lib.ApiConnection.get', {
                     message: 'request failed',

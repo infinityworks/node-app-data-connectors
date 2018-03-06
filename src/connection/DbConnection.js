@@ -5,6 +5,7 @@ const mysql = require('mysql');
 module.exports = (
     logger,
     metrics,
+    timers,
     host,
     port,
     user,
@@ -66,13 +67,19 @@ module.exports = (
 
     function query(sql, values = []) {
         return new Promise((resolve, reject) => {
+            const startToken = timers.start();
             newConnection()
                 .then((connection) => {
                     connection.query(sql, values, (err, rows) => {
+                        const duration = timers.stop(startToken);
                         if (err) {
                             logger.error('connector.DBConnection.sql', err);
                             return reject(err);
                         }
+                        logger.info('connector.DBConnection.query.done', {
+                            duration,
+                            count: rows.length,
+                        });
                         releaseConnection(connection);
                         return resolve(rows);
                     });

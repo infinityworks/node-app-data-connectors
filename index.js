@@ -2,11 +2,12 @@ const ApiConnection = require('./src/connection/ApiConnection');
 const DbConnection = require('./src/connection/DbConnection');
 const JsonApiFetch = require('./src/source/JsonApiFetch');
 
-module.exports = (logger, metrics) => {
+module.exports = (logger, metrics, timers) => {
     const apiConnection = (host, port, protocol) =>
         ApiConnection(
             logger,
             metrics,
+            timers,
             host,
             port,
             protocol,
@@ -16,6 +17,7 @@ module.exports = (logger, metrics) => {
         DbConnection(
             logger,
             metrics,
+            timers,
             host,
             port,
             username,
