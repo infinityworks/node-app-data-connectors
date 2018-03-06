@@ -23,7 +23,7 @@ Import the library and then initialise each individual connector with the desire
 ### Example
 
 ```
-const DataConnectors = require('node-app-data-connectors')(logger, metrics);
+const DataConnectors = require('node-app-data-connectors')(logger, metrics, timers);
 
 const apiConnection = DataConnectors.apiConnection(
     config.get('SPORTSAPI_HOST'),
