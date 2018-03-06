@@ -64,11 +64,11 @@ module.exports = (
         });
     }
 
-    function query(sql) {
+    function query(sql, values = []) {
         return new Promise((resolve, reject) => {
             newConnection()
                 .then((connection) => {
-                    connection.query(sql, (err, rows) => {
+                    connection.query(sql, values, (err, rows) => {
                         if (err) {
                             logger.error('connector.DBConnection.sql', err);
                             return reject(err);
