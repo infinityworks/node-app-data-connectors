@@ -2,6 +2,8 @@
 
 const mysql = require('mysql');
 
+const DEFAULT_OUTPUT_LABEL = 'connector.DBConnection';
+
 module.exports = (
     logger,
     metrics,
@@ -11,6 +13,7 @@ module.exports = (
     user,
     password,
     database,
+    logConnections = false,
 ) => {
     const pool = mysql.createPool({
         host,
@@ -29,9 +32,11 @@ module.exports = (
     function releaseConnection(connection) {
         connection.release();
 
-        logger.info('connector.DBConnection.releaseConnection', {
-            message: 'db connection dropped',
-        });
+        if (logConnections) {
+            logger.info('connector.DBConnection.releaseConnection', {
+                message: 'db connection dropped',
+            });
+        }
     }
 
     function newConnection() {
@@ -42,9 +47,11 @@ module.exports = (
                     return reject(err);
                 }
 
-                logger.info('connector.DBConnection.newConnection', {
-                    message: 'new db connection sourced from pool',
-                });
+                if (logConnections) {
+                    logger.info('connector.DBConnection.newConnection', {
+                        message: 'new db connection sourced from pool',
+                    });
+                }
 
                 return resolve(connection);
             });
@@ -65,7 +72,8 @@ module.exports = (
         });
     }
 
-    function query(sql, values = []) {
+    function query(sql, values = [], label) {
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
             const startToken = timers.start();
             newConnection()
@@ -73,10 +81,10 @@ module.exports = (
                     connection.query(sql, values, (err, rows) => {
                         const duration = timers.stop(startToken);
                         if (err) {
-                            logger.error('connector.DBConnection.sql', err);
+                            logger.error(`${outputLabel}.sql`, err);
                             return reject(err);
                         }
-                        logger.info('connector.DBConnection.query.done', {
+                        logger.info(`${outputLabel}.query.done`, {
                             duration,
                             count: rows.length,
                         });
@@ -85,13 +93,14 @@ module.exports = (
                     });
                 })
                 .catch((err) => {
-                    logger.error('connector.DBConnection.sql', err);
+                    logger.error(`${outputLabel}.sql`, err);
                     reject(err);
                 });
         });
     }
 
-    function multiStmtQuery(sql, values) {
+    function multiStmtQuery(sql, values, label) {
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
             newConnection()
                 .then((connection) => {
@@ -99,7 +108,7 @@ module.exports = (
                     const queries = values.reduce((acc, row) => acc + connection.format(sql, row), '');
                     connection.query(queries, (err, rows) => {
                         if (err) {
-                            logger.error('connector.DBConnection.multiStmtQuery', { message: err });
+                            logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
                             return reject(err);
                         }
                         releaseConnection(connection);
@@ -107,20 +116,21 @@ module.exports = (
                     });
                 })
                 .catch((err) => {
-                    logger.error('connector.DBConnection.multiStmtQuery', { message: err });
+                    logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
                     reject(err);
                 });
         });
     }
 
     // TODO -- Use transactions? connection.beginTransaction ...
-    function bulkInsert(sql, values) {
+    function bulkInsert(sql, values, label) {
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
             newConnection()
                 .then((connection) => {
                     connection.query(sql, [values], (err) => {
                         if (err) {
-                            logger.error('connector.DbConnection.bulkInsert', err);
+                            logger.error(`${outputLabel}.bulkInsert`, err);
                             return reject(err);
                         }
                         releaseConnection(connection);
@@ -128,7 +138,7 @@ module.exports = (
                     });
                 })
                 .catch((err) => {
-                    logger.error('connector.DbConnection.bulkInsert', err);
+                    logger.error(`${outputLabel}.bulkInsert`, err);
                     reject(err);
                 });
         });
