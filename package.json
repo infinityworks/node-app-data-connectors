@@ -4,9 +4,10 @@
   "description": "Collection of libraries to provide an easy interface to common data sources",
   "main": "index.js",
   "dependencies": {
-    "node-app-base": "^0.4.10",
     "moment": "^2.20.1",
     "mysql": "^2.15.0",
+    "node-app-base": "^0.4.10",
+    "redis": "^2.8.0",
     "request-promise": "^4.2.2"
   },
   "devDependencies": {

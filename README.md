@@ -37,5 +37,10 @@ const dbConnection = DataConnectors.dbConnection(
     config.get('DB_PASSWORD'),
     config.get('DB_NAME'),
 );
+const redisConnection = DataConnectors.redisConnection(
+    config.get('REDIS_HOST'),
+    config.get('REDIS_PORT'),
+    config.get('REDIS_DB_INDEX'),
+);
 const jsonApiFetch = DataConnectors.jsonApiFetch(apiConnection);
 ```
