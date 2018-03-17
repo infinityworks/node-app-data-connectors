@@ -13,6 +13,7 @@ module.exports = (
         dbIndex,
     });
 
+    const CONNECT_TIMEOUT_MS = 2000;
     let client = null;
 
     const RedisConnector = {
@@ -24,11 +25,11 @@ module.exports = (
             client = redis.createClient(
                 port,
                 host,
-                { connect_timeout: 2000, dbIndex },
+                { connect_timeout: CONNECT_TIMEOUT_MS, dbIndex },
             );
             client.on('error', (err) => {
                 logger.error(
-                    'stats-worker.cache.error',
+                    'cache.error',
                     {
                         message: err.toString(),
                     },
