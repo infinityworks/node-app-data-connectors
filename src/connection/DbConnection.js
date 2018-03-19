@@ -13,15 +13,17 @@ module.exports = (
     user,
     password,
     database,
-    logConnections = false,
+    connectionOptions = {},
+    enableConnectionLogging = false,
 ) => {
-    const pool = mysql.createPool({
+    const poolOpts = Object.assign(connectionOptions, {
         host,
         user,
         password,
         database,
-        multipleStatements: true,
     });
+
+    const pool = mysql.createPool(poolOpts);
 
     logger.info('connector.DBConnection.init', {
         message: 'new db connection',
@@ -32,7 +34,7 @@ module.exports = (
     function releaseConnection(connection) {
         connection.release();
 
-        if (logConnections) {
+        if (enableConnectionLogging) {
             logger.info('connector.DBConnection.releaseConnection', {
                 message: 'db connection dropped',
             });
@@ -47,7 +49,7 @@ module.exports = (
                     return reject(err);
                 }
 
-                if (logConnections) {
+                if (enableConnectionLogging) {
                     logger.info('connector.DBConnection.newConnection', {
                         message: 'new db connection sourced from pool',
                     });
@@ -100,6 +102,14 @@ module.exports = (
     }
 
     function multiStmtQuery(sql, values, label) {
+        if (poolOpts.multipleStatements !== true) {
+            return Promise.reject(
+                new Error(
+                    'This pool has not been initialised with "multipleStatements: true" as an option'
+                )
+            );
+        }
+
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
             newConnection()

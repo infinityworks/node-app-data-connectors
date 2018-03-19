@@ -15,7 +15,15 @@ module.exports = (logger, metrics, timers) => {
             protocol,
         );
 
-    const dbConnection = (host, port, username, password, dbName) =>
+    const dbConnection = (
+        host,
+        port,
+        username,
+        password,
+        dbName,
+        connectionOptions,
+        enableConnectionLogging,
+    ) =>
         DbConnection(
             logger,
             metrics,
@@ -25,6 +33,8 @@ module.exports = (logger, metrics, timers) => {
             username,
             password,
             dbName,
+            connectionOptions,
+            enableConnectionLogging,
         );
 
     const redisConnection = (host, port, dbIndex) =>
