@@ -112,6 +112,9 @@ module.exports = (
                             return reject(err);
                         }
                         releaseConnection(connection);
+                        if (!Array.isArray(rows)) {
+                            rows = [rows];
+                        }
                         return resolve(rows);
                     });
                 })
