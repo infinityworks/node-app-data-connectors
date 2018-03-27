@@ -41,6 +41,22 @@ module.exports = (
         },
     };
 
+    RedisConnector.get = (key) => {
+        logger.info('cache.get', {
+            key,
+        });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().get(key, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
     RedisConnector.set = (key, value) => {
         logger.info('cache.set', {
             key,
