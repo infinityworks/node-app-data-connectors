@@ -57,6 +57,22 @@ module.exports = (
         });
     };
 
+    RedisConnector.mget = () => {
+        const keys = Array.from(arguments);
+        logger.info('cache.get', { keys });
+
+        return new Promise((resolve, reject) => {
+            keys.push((err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+            RedisConnector.client().mget.apply(null, keys);
+        });
+    };
+
     RedisConnector.set = (key, value) => {
         logger.info('cache.set', {
             key,

@@ -103,11 +103,7 @@ module.exports = (
 
     function multiStmtQuery(sql, values, label) {
         if (poolOpts.multipleStatements !== true) {
-            return Promise.reject(
-                new Error(
-                    'This pool has not been initialised with "multipleStatements: true" as an option'
-                )
-            );
+            return Promise.reject(new Error('This pool has not been initialised with "multipleStatements: true" as an option'));
         }
 
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
