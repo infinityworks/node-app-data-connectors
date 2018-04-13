@@ -80,7 +80,10 @@ module.exports = (
             const startToken = timers.start();
             newConnection()
                 .then((connection) => {
-                    connection.query(sql, values, (err, rows) => {
+                    connection.config.queryFormat = bindParamLabels;
+                    const formattedSql = connection.format(sql, values);
+
+                    connection.query(formattedSql, values, (err, rows) => {
                         const duration = timers.stop(startToken);
                         if (err) {
                             logger.error(`${outputLabel}.sql`, err);
