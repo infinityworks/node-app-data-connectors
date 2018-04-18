@@ -61,7 +61,7 @@ module.exports = (
     }
 
     function bindParamLabels(sql, values) {
-        if (!values) {
+        if (!values || values.length === 0) {
             return sql;
         }
 
@@ -101,6 +101,41 @@ module.exports = (
         });
     }
 
+    function labelQuery(sql, values = [], label) {
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
+        return new Promise((resolve, reject) => {
+            const startToken = timers.start();
+            newConnection()
+                .then((connection) => {
+                    connection.config.queryFormat = bindParamLabels;
+                    const formattedSql = connection.format(sql, values);
+
+                    connection.query(formattedSql, values, (err, rows) => {
+                        const duration = timers.stop(startToken);
+                        if (err) {
+                            logger.error(`${outputLabel}.sql`, err);
+                            return reject(err);
+                        }
+                        logger.info(`${outputLabel}.query.done`, {
+                            duration,
+                            count: rows.length,
+                        });
+
+                        // Since query format is set per connection and we have a pool of them,
+                        // we might end up reusing this connection with this query format in a
+                        // query that doesn't expect it.
+                        connection.config.queryFormat = null;
+                        releaseConnection(connection);
+                        return resolve(rows);
+                    });
+                })
+                .catch((err) => {
+                    logger.error(`${outputLabel}.sql`, err);
+                    reject(err);
+                });
+        });
+    }
+
     function multiStmtQuery(sql, values, label) {
         if (poolOpts.multipleStatements !== true) {
             return Promise.reject(new Error('This pool has not been initialised with "multipleStatements: true" as an option'));
@@ -117,10 +152,13 @@ module.exports = (
                             logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
                             return reject(err);
                         }
+
+                        connection.config.queryFormat = null;
                         releaseConnection(connection);
                         if (!Array.isArray(rows)) {
                             rows = [rows];
                         }
+
                         return resolve(rows);
                     });
                 })
@@ -153,5 +191,10 @@ module.exports = (
         });
     }
 
-    return { query, multiStmtQuery, bulkInsert };
+    return {
+        query,
+        multiStmtQuery,
+        labelQuery,
+        bulkInsert,
+    };
 };
