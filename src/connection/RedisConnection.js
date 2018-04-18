@@ -57,9 +57,10 @@ module.exports = (
         });
     };
 
-    RedisConnector.mget = () => {
-        const keys = Array.from(arguments);
-        logger.info('cache.get', { keys });
+    RedisConnector.mget = (...args) => {
+        const keys = Array.from(args);
+        logger.info('cache.mget', { keys });
+        const localClient = RedisConnector.client();
 
         return new Promise((resolve, reject) => {
             keys.push((err, response) => {
@@ -69,7 +70,7 @@ module.exports = (
                     resolve(response);
                 }
             });
-            RedisConnector.client().mget.apply(null, keys);
+            localClient.mget.apply(localClient, keys);
         });
     };
 
