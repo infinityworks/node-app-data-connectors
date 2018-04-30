@@ -3,6 +3,9 @@
 const mysql = require('mysql');
 
 const DEFAULT_OUTPUT_LABEL = 'connector.DBConnection';
+const QUEUE_LIMIT = 100;
+const ACQUIRE_TIMEOUT = 1000;
+const WAIT_FOR_CONNECTIONS = false;
 
 module.exports = (
     logger,
@@ -21,6 +24,9 @@ module.exports = (
         user,
         password,
         database,
+        queueLimit: QUEUE_LIMIT,
+        acquireTimeout: ACQUIRE_TIMEOUT,
+        waitForConnections: WAIT_FOR_CONNECTIONS,
     });
 
     const pool = mysql.createPool(poolOpts);
@@ -84,6 +90,7 @@ module.exports = (
                         const duration = timers.stop(startToken);
                         if (err) {
                             logger.error(`${outputLabel}.sql`, err);
+                            connection.destroy();
                             return reject(err);
                         }
                         logger.info(`${outputLabel}.query.done`, {
