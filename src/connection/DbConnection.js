@@ -19,7 +19,7 @@ module.exports = (
     connectionOptions = {},
     enableConnectionLogging = false,
 ) => {
-    const poolOpts = Object.assign(connectionOptions, {
+    const poolOpts = Object.assign({
         host,
         user,
         password,
@@ -27,7 +27,7 @@ module.exports = (
         queueLimit: QUEUE_LIMIT,
         acquireTimeout: ACQUIRE_TIMEOUT,
         waitForConnections: WAIT_FOR_CONNECTIONS,
-    });
+    }, connectionOptions);
 
     const pool = mysql.createPool(poolOpts);
 

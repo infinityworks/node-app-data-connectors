@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2018-05-02
+### Fixed
+- [DbConnection] Fix always using default pool connection options instead of the ones supplied by the client
+
 ## [0.4.0] - 2018-05-02
 ### Changed
 - [DbConnection] Upgraded MySQL driver from `node-mysql` to `node-mysql2`, which is faster and fully API-compatible with the former.
