@@ -1,6 +1,6 @@
 /* eslint no-param-reassign: 1 */
 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 const DEFAULT_OUTPUT_LABEL = 'connector.DBConnection';
 const QUEUE_LIMIT = 100;
