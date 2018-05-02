@@ -198,10 +198,29 @@ module.exports = (
         });
     }
 
+    function isHealthy() {
+        return new Promise((resolve, reject) => {
+            newConnection()
+                .then((connection) => {
+                    connection.query('SELECT 1', null, (err, rows) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        releaseConnection(connection);
+                        return resolve(rows && rows.length > 0 && rows[0][1] === 1);
+                    });
+                })
+                .catch((err) => {
+                    reject(err);
+                });
+        });
+    }
+
     return {
         query,
         multiStmtQuery,
         labelQuery,
         bulkInsert,
+        isHealthy,
     };
 };
