@@ -104,5 +104,17 @@ module.exports = (
         });
     };
 
+    RedisConnector.isHealthy = () => (
+        new Promise((resolve, reject) => {
+            RedisConnector.client().ping((err, response) => {
+                if (err) {
+                    reject(err);
+                }
+
+                resolve(response && response.toUpperCase() === 'PONG');
+            });
+        })
+    );
+
     return RedisConnector;
 };
