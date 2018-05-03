@@ -108,11 +108,16 @@ module.exports = (
         new Promise((resolve, reject) => {
             RedisConnector.client().ping((err, response) => {
                 if (err) {
-                    logger.error('connector.RedisConnection.unhealthy');
-                    reject(err);
+                    logger.error('connector.RedisConnection.unhealthy', { message: err.message });
+                    return reject(err);
                 }
 
-                resolve(response && response.toUpperCase() === 'PONG');
+                if (!response && response.toUpperCase() !== 'PONG') {
+                    logger.error('connector.RedisConnection.unhealthy', { message: 'Response obtained from Redis was invalid' });
+                    return reject();
+                }
+
+                return resolve(true);
             });
         })
     );
