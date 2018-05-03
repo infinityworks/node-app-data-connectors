@@ -104,5 +104,23 @@ module.exports = (
         });
     };
 
+    RedisConnector.isHealthy = () => (
+        new Promise((resolve, reject) => {
+            RedisConnector.client().ping((err, response) => {
+                if (err) {
+                    logger.error('connector.RedisConnection.unhealthy', { message: err.message });
+                    return reject(err);
+                }
+
+                if (!response && response.toUpperCase() !== 'PONG') {
+                    logger.error('connector.RedisConnection.unhealthy', { message: 'Response obtained from Redis was invalid' });
+                    return reject();
+                }
+
+                return resolve(true);
+            });
+        })
+    );
+
     return RedisConnector;
 };

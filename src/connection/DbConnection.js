@@ -198,10 +198,37 @@ module.exports = (
         });
     }
 
+    function isHealthy() {
+        return new Promise((resolve, reject) => {
+            newConnection()
+                .then((connection) => {
+                    connection.query('SELECT 1', null, (err, rows) => {
+                        if (err) {
+                            logger.error('connector.DBConnection.unhealthy', { message: err.message });
+                            return reject(err);
+                        }
+                        releaseConnection(connection);
+
+                        if (!rows || rows.length === 0 || rows[0][1] !== 1) {
+                            logger.error('connector.DBConnection.unhealthy', { message: 'Response obtained from database was invalid' });
+                            return reject();
+                        }
+
+                        return resolve(true);
+                    });
+                })
+                .catch((err) => {
+                    logger.error('connector.DBConnection.unhealthy', { message: err.message });
+                    reject(err);
+                });
+        });
+    }
+
     return {
         query,
         multiStmtQuery,
         labelQuery,
         bulkInsert,
+        isHealthy,
     };
 };

@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2018-05-03
+### Added
+- [DbConnection] Add healthcheck function
+- [RedisConnection] Add healtcheck function
+- Add generic healthcheck callback function for node-app-base healthcheck listener
+
 ## [0.4.1] - 2018-05-02
 ### Fixed
 - [DbConnection] Fix always using default pool connection options instead of the ones supplied by the client
