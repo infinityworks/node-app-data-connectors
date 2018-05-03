@@ -21,7 +21,7 @@ You can also install specific releases or git commits in this fashion. For the s
 
 Import the library and then initialise each individual connector with the desired parameters.
 
-### Example
+### Connector instantiation
 
 ```
 const DataConnectors = require('node-app-data-connectors')(logger, metrics, timers);
@@ -44,4 +44,13 @@ const redisConnection = DataConnectors.redisConnection(
     config.get('REDIS_DB_INDEX'),
 );
 const jsonApiFetch = DataConnectors.jsonApiFetch(apiConnection);
+```
+
+### Connector healthchecks
+
+You can generate a healtcheck callback ready for consumption by the node-app-base healthcheck listener by invoking the `getHealthCheckCallback` function and passing an array containing all data sources that you want to monitor.
+
+```
+const healthCheckCallback = DataConnectors.getHealthCheckCallback([dbConnection, redisConnection]);
+healthCheck.initListener(healthCheckCallback());
 ```
