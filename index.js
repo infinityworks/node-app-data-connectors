@@ -48,10 +48,40 @@ module.exports = (logger, metrics, timers) => {
 
     const jsonApiFetch = (apiConn => JsonApiFetch(logger, metrics, apiConn));
 
+    function getHealthCheckCallback(sources = []) {
+        return () => (
+            async () => {
+                if (!sources || sources.length === 0) {
+                    logger.error('data.healthcheck', 'No data sources provided');
+                    throw new Error('No data sources passed');
+                }
+
+                const sourcesHealthchecks = await (Promise.all(sources.map(async (source) => {
+                    try {
+                        return source.isHealthy();
+                    } catch (e) {
+                        if (e instanceof TypeError) {
+                            logger.error('data.healthcheck', { message: 'Data source does not implement healthcheck function' });
+                        }
+
+                        return false;
+                    }
+                })));
+
+                if (sourcesHealthchecks.some(r => !r)) {
+                    throw new Error();
+                }
+
+                return true;
+            }
+        );
+    }
+
     return {
         apiConnection,
         dbConnection,
         redisConnection,
         jsonApiFetch,
+        getHealthCheckCallback,
     };
 };
