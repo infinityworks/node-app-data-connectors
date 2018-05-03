@@ -108,6 +108,7 @@ module.exports = (
         new Promise((resolve, reject) => {
             RedisConnector.client().ping((err, response) => {
                 if (err) {
+                    logger.error('connector.RedisConnection.unhealthy');
                     reject(err);
                 }
 

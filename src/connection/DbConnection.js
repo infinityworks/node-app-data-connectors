@@ -204,6 +204,7 @@ module.exports = (
                 .then((connection) => {
                     connection.query('SELECT 1', null, (err, rows) => {
                         if (err) {
+                            logger.error('connector.DBConnection.unhealthy');
                             return reject(err);
                         }
                         releaseConnection(connection);
@@ -211,6 +212,7 @@ module.exports = (
                     });
                 })
                 .catch((err) => {
+                    logger.error('connector.DBConnection.unhealthy');
                     reject(err);
                 });
         });
