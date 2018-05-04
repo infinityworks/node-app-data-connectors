@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2018-05-04
+### Removed
+- No longer accept metrics parameter when initialising the module
+- Remove erroneous, non-generic metric logging from JSON API calls
+
 ## [0.5.0] - 2018-05-03
 ### Added
 - [DbConnection] Add healthcheck function

@@ -4,11 +4,10 @@ const RedisConnection = require('./src/connection/RedisConnection');
 
 const JsonApiFetch = require('./src/source/JsonApiFetch');
 
-module.exports = (logger, metrics, timers) => {
+module.exports = (logger, timers) => {
     const apiConnection = (host, port, protocol) =>
         ApiConnection(
             logger,
-            metrics,
             timers,
             host,
             port,
@@ -26,7 +25,6 @@ module.exports = (logger, metrics, timers) => {
     ) =>
         DbConnection(
             logger,
-            metrics,
             timers,
             host,
             port,
@@ -40,13 +38,12 @@ module.exports = (logger, metrics, timers) => {
     const redisConnection = (host, port, dbIndex) =>
         RedisConnection(
             logger,
-            metrics,
             host,
             port,
             dbIndex,
         );
 
-    const jsonApiFetch = (apiConn => JsonApiFetch(logger, metrics, apiConn));
+    const jsonApiFetch = (apiConn => JsonApiFetch(logger, apiConn));
 
     function getHealthCheckCallback(sources = []) {
         return () => (

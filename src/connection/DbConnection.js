@@ -9,7 +9,6 @@ const WAIT_FOR_CONNECTIONS = false;
 
 module.exports = (
     logger,
-    metrics,
     timers,
     host,
     port,

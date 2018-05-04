@@ -1,6 +1,6 @@
 const moment = require('moment');
 
-module.exports = (logger, metrics, connection) => {
+module.exports = (logger, connection) => {
     async function fetchFromJsonApi(apiPath, qsObj, transactionId) {
         const startTime = moment();
 
@@ -16,13 +16,6 @@ module.exports = (logger, metrics, connection) => {
                         duration,
                     },
                 );
-
-                metrics.histogram({
-                    name: 'events_api_respone_time',
-                    help: 'time taken to receive response from betfeed api',
-                    buckets: [10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
-                    value: duration,
-                });
 
                 // check if response is falsy before trying to parse
                 if (!response) {
