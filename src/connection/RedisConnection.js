@@ -2,7 +2,6 @@ const redis = require('redis');
 
 module.exports = (
     logger,
-    metrics,
     host,
     port,
     dbIndex,
