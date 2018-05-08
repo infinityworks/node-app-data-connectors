@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2018-05-08
+### Added
+- [DbConnection] `connectionLimit` pool flag and increase default to a more reasonable (higher) value
+- [DbConnection] Explain connection pool flags
+
 ## [0.6.0] - 2018-05-04
 ### Removed
 - No longer accept metrics parameter when initialising the module
