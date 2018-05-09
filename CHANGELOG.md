@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2018-05-09
+### Fixed
+- Correctly set Redis DB index
+- Fixed linting error
+
 ## [0.7.0] - 2018-05-08
 ### Added
 - [DbConnection] `connectionLimit` pool flag and increase default to a more reasonable (higher) value

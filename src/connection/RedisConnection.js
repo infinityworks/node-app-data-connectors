@@ -24,7 +24,7 @@ module.exports = (
             client = redis.createClient(
                 port,
                 host,
-                { connect_timeout: CONNECT_TIMEOUT_MS, dbIndex },
+                { connect_timeout: CONNECT_TIMEOUT_MS, db: dbIndex },
             );
             client.on('error', (err) => {
                 logger.error(
@@ -69,7 +69,8 @@ module.exports = (
                     resolve(response);
                 }
             });
-            localClient.mget.apply(localClient, keys);
+
+            localClient.mget(...keys);
         });
     };
 
