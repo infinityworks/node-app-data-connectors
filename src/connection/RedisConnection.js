@@ -69,7 +69,8 @@ module.exports = (
                     resolve(response);
                 }
             });
-            localClient.mget.apply(localClient, keys);
+
+            localClient.mget(...keys);
         });
     };
 
