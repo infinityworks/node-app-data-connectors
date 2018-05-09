@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2018-05-09
+### Added
+- New Redis methods for lists
+  - lpush
+  - rpush
+  - lpop
+  - rpop
+  - blpop
+  - brpop
+
 ## [0.7.1] - 2018-05-09
 ### Fixed
 - Correctly set Redis DB index

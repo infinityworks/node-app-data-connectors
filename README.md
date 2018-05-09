@@ -6,14 +6,14 @@ Collection of libraries to interface with external data sources. At the moment, 
 
 - MySQL
 - HTTP API
-    - JSON REST API requests
+  - JSON REST API requests
 - Redis
 
 ## Installation
 
 Add the following line to your `package.json` dependencies
 
-```
+```json
 "node-app-data-connectors": "git+ssh://git@github.com:infinityworks/node-app-data-connectors.git[#<version>]"
 ```
 
@@ -25,7 +25,7 @@ Import the library and then initialise each individual connector with the desire
 
 ### Connector instantiation
 
-```
+```js
 const DataConnectors = require('node-app-data-connectors')(logger, metrics, timers);
 
 const apiConnection = DataConnectors.apiConnection(
@@ -50,9 +50,9 @@ const jsonApiFetch = DataConnectors.jsonApiFetch(apiConnection);
 
 ### Connector healthchecks
 
-You can generate a healthcheck callback ready for consumption by the node-app-base healthcheck listener by invoking the `getHealthCheckCallback` function and passing an array containing all data sources that you want to monitor.
+You can generate a healthcheck callback ready for consumption by the [node-app-base](https://github.com/infinityworks/node-app-base) healthcheck listener by invoking the `getHealthCheckCallback` function and passing an array containing all data sources that you want to monitor.
 
-```
+```js
 const healthCheckCallback = DataConnectors.getHealthCheckCallback([dbConnection, redisConnection]);
 healthCheck.initListener(healthCheckCallback());
 ```
