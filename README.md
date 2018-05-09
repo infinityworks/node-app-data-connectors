@@ -1,5 +1,7 @@
 # node-app-data-connectors
 
+[![Build Status](https://travis-ci.org/infinityworks/node-app-data-connectors.svg?branch=master)](https://travis-ci.org/infinityworks/node-app-data-connectors)
+
 Collection of libraries to interface with external data sources. At the moment, the following sources are supported:
 
 - MySQL
