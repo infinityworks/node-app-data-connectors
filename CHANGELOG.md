@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2018-05-14
+### Fixed
+- Passes configurable port to mysql
+
 ## [1.0.2] - 2018-05-14
 ### Fixed
 - Upgrade to node-app-base 0.4.13 to fix memory leak
