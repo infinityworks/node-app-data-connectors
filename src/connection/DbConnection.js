@@ -38,6 +38,7 @@ module.exports = (
 ) => {
     const poolOpts = Object.assign({
         host,
+        port,
         user,
         password,
         database,
