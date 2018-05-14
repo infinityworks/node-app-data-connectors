@@ -6,7 +6,7 @@
   "dependencies": {
     "moment": "^2.20.1",
     "mysql2": "^1.5.3",
-    "node-app-base": "^0.4.10",
+    "node-app-base": "git+ssh://git@github.com:infinityworks/node-app-base.git#timers_leak",
     "redis": "^2.8.0",
     "request-promise": "^4.2.2"
   },
