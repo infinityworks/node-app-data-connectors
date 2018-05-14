@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2018-05-14
+### Fixed
+- Passes configurable port to mysql
+
 ## [0.7.1] - 2018-05-09
 ### Fixed
 - Correctly set Redis DB index
