@@ -1,9 +1,27 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.7.2] - 2018-05-14
+## [1.0.3] - 2018-05-14
 ### Fixed
 - Passes configurable port to mysql
+
+## [1.0.2] - 2018-05-14
+### Fixed
+- Upgrade to node-app-base 0.4.13 to fix memory leak
+
+## [1.0.1] - 2018-05-14
+### Fixed
+- Pass correct arguments to lpop and rpop redis commands
+
+## [1.0.0] - 2018-05-09
+### Added
+- New Redis methods for lists
+  - lpush
+  - rpush
+  - lpop
+  - rpop
+  - blpop
+  - brpop
 
 ## [0.7.1] - 2018-05-09
 ### Fixed

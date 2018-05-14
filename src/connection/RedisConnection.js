@@ -104,6 +104,90 @@ module.exports = (
         });
     };
 
+    RedisConnector.lpush = (key, values) => {
+        logger.info('cache.lpush', { key, values });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().lpush(key, ...values, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    RedisConnector.rpush = (key, values) => {
+        logger.info('cache.rpush', { key, values });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().rpush(key, ...values, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    RedisConnector.lpop = (key) => {
+        logger.info('cache.lpop', { key });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().lpop(key, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    RedisConnector.rpop = (key) => {
+        logger.info('cache.rpop', { key });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().rpop(key, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    RedisConnector.blpop = (key, timeout) => {
+        logger.info('cache.blpop', { key });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().blpop(key, timeout, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    RedisConnector.brpop = (key, timeout) => {
+        logger.info('cache.brpop', { key });
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().brpop(key, timeout, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
     RedisConnector.isHealthy = () => (
         new Promise((resolve, reject) => {
             RedisConnector.client().ping((err, response) => {
