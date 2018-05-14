@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2018-05-14
+### Fixed
+- Pass correct arguments to lpop and rpop redis commands
+
 ## [1.0.0] - 2018-05-09
 ### Added
 - New Redis methods for lists
