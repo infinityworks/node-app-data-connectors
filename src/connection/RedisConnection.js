@@ -5,6 +5,7 @@ module.exports = (
     host,
     port,
     dbIndex,
+    enableInfoLogs = true,
 ) => {
     logger.info('redisconnector.init', {
         host,
@@ -14,6 +15,7 @@ module.exports = (
 
     const CONNECT_TIMEOUT_MS = 2000;
     let client = null;
+    let infoLogsEnabled = enableInfoLogs;
 
     const RedisConnector = {
         client: () => {
@@ -40,10 +42,20 @@ module.exports = (
         },
     };
 
+    RedisConnector.disableLogs = () => {
+        infoLogsEnabled = false;
+    };
+
+    RedisConnector.enableLogs = () => {
+        infoLogsEnabled = true;
+    };
+
     RedisConnector.get = (key) => {
-        logger.info('cache.get', {
-            key,
-        });
+        if (infoLogsEnabled) {
+            logger.info('cache.get', {
+                key,
+            });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().get(key, (err, response) => {
@@ -58,7 +70,9 @@ module.exports = (
 
     RedisConnector.mget = (...args) => {
         const keys = Array.from(args);
-        logger.info('cache.mget', { keys });
+        if (infoLogsEnabled) {
+            logger.info('cache.mget', { keys });
+        }
         const localClient = RedisConnector.client();
 
         return new Promise((resolve, reject) => {
@@ -75,9 +89,11 @@ module.exports = (
     };
 
     RedisConnector.set = (key, value) => {
-        logger.info('cache.set', {
-            key,
-        });
+        if (infoLogsEnabled) {
+            logger.info('cache.set', {
+                key,
+            });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().set(key, value, (err, response) => {
@@ -91,7 +107,9 @@ module.exports = (
     };
 
     RedisConnector.delete = (key) => {
-        logger.info('cache.delete', { key });
+        if (infoLogsEnabled) {
+            logger.info('cache.delete', { key });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().del(key, (err, response) => {
@@ -105,7 +123,9 @@ module.exports = (
     };
 
     RedisConnector.lpush = (key, values) => {
-        logger.info('cache.lpush', { key, values });
+        if (infoLogsEnabled) {
+            logger.info('cache.lpush', { key, values });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().lpush(key, ...values, (err, response) => {
@@ -119,7 +139,9 @@ module.exports = (
     };
 
     RedisConnector.rpush = (key, values) => {
-        logger.info('cache.rpush', { key, values });
+        if (infoLogsEnabled) {
+            logger.info('cache.rpush', { key, values });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().rpush(key, ...values, (err, response) => {
@@ -132,8 +154,8 @@ module.exports = (
         });
     };
 
-    RedisConnector.lpop = (key, suppressLogs = false) => {
-        if (!suppressLogs) {
+    RedisConnector.lpop = (key) => {
+        if (infoLogsEnabled) {
             logger.info('cache.lpop', { key });
         }
 
@@ -148,8 +170,8 @@ module.exports = (
         });
     };
 
-    RedisConnector.rpop = (key, suppressLogs = false) => {
-        if (!suppressLogs) {
+    RedisConnector.rpop = (key) => {
+        if (infoLogsEnabled) {
             logger.info('cache.rpop', { key });
         }
 
@@ -164,8 +186,8 @@ module.exports = (
         });
     };
 
-    RedisConnector.blpop = (key, timeout, suppressLogs = false) => {
-        if (!suppressLogs) {
+    RedisConnector.blpop = (key, timeout) => {
+        if (infoLogsEnabled) {
             logger.info('cache.blpop', { key });
         }
 
@@ -180,8 +202,8 @@ module.exports = (
         });
     };
 
-    RedisConnector.brpop = (key, timeout, suppressLogs = false) => {
-        if (!suppressLogs) {
+    RedisConnector.brpop = (key, timeout) => {
+        if (infoLogsEnabled) {
             logger.info('cache.brpop', { key });
         }
 
