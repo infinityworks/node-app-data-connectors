@@ -132,8 +132,10 @@ module.exports = (
         });
     };
 
-    RedisConnector.lpop = (key) => {
-        logger.info('cache.lpop', { key });
+    RedisConnector.lpop = (key, suppressLogs = false) => {
+        if (!suppressLogs) {
+            logger.info('cache.lpop', { key });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().lpop(key, (err, response) => {
@@ -146,8 +148,10 @@ module.exports = (
         });
     };
 
-    RedisConnector.rpop = (key) => {
-        logger.info('cache.rpop', { key });
+    RedisConnector.rpop = (key, suppressLogs = false) => {
+        if (!suppressLogs) {
+            logger.info('cache.rpop', { key });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().rpop(key, (err, response) => {
@@ -160,8 +164,10 @@ module.exports = (
         });
     };
 
-    RedisConnector.blpop = (key, timeout) => {
-        logger.info('cache.blpop', { key });
+    RedisConnector.blpop = (key, timeout, suppressLogs = false) => {
+        if (!suppressLogs) {
+            logger.info('cache.blpop', { key });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().blpop(key, timeout, (err, response) => {
@@ -174,8 +180,10 @@ module.exports = (
         });
     };
 
-    RedisConnector.brpop = (key, timeout) => {
-        logger.info('cache.brpop', { key });
+    RedisConnector.brpop = (key, timeout, suppressLogs = false) => {
+        if (!suppressLogs) {
+            logger.info('cache.brpop', { key });
+        }
 
         return new Promise((resolve, reject) => {
             RedisConnector.client().brpop(key, timeout, (err, response) => {

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2018-05-15
+### Added
+- Add ability to suppress logs for redis pop commands
+
 ## [1.0.3] - 2018-05-14
 ### Fixed
 - Passes configurable port to mysql
