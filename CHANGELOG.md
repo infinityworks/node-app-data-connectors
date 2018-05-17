@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2018-05-16
+### Added
+- Redis pub/sub commands:
+  - publish
+  - subscribe
+  - listen
+
 ## [1.1.0] - 2018-05-15
 ### Added
 - Add ability to suppress info logs for redis commands

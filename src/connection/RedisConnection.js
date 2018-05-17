@@ -124,7 +124,7 @@ module.exports = (
 
     RedisConnector.lpush = (key, values) => {
         if (infoLogsEnabled) {
-            logger.info('cache.lpush', { key, values });
+            logger.info('cache.lpush', { key });
         }
 
         return new Promise((resolve, reject) => {
@@ -140,7 +140,7 @@ module.exports = (
 
     RedisConnector.rpush = (key, values) => {
         if (infoLogsEnabled) {
-            logger.info('cache.rpush', { key, values });
+            logger.info('cache.rpush', { key });
         }
 
         return new Promise((resolve, reject) => {
@@ -216,6 +216,42 @@ module.exports = (
                 }
             });
         });
+    };
+
+    RedisConnector.publish = (channel, value) => {
+        if (infoLogsEnabled) {
+            logger.info('cache.publish', { channel });
+        }
+
+        return new Promise((resolve, reject) => {
+            RedisConnector.client().publish(channel, value, (err, response) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    RedisConnector.subscribe = (channels) => {
+        if (infoLogsEnabled) {
+            logger.info('cache.subscribe', { channels });
+        }
+
+        RedisConnector.client().subscribe(...channels, (err) => {
+            if (err) {
+                logger.warn('cache.subscribe.fail', { message: `Failed to subscribe to channels: ${channels}` });
+            }
+        });
+    };
+
+    RedisConnector.listen = (event, callback) => {
+        if (infoLogsEnabled) {
+            logger.info('cache.listen', { event });
+        }
+
+        RedisConnector.client().on(event, callback);
     };
 
     RedisConnector.isHealthy = () => (
