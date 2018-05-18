@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2018-05-16
+### Added
+- [DbConnection] Options parameter to multi-statement query to switch between labelled and positional parameters
+
 ## [1.2.0] - 2018-05-16
 ### Added
 - Redis pub/sub commands:
