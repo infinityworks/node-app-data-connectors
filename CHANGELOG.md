@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2018-05-23
+### Changed
+- Upgraded node-mysql2 module to include support for more pool connection lifecycle events
+
 ## [1.3.0] - 2018-05-16
 ### Added
 - [DbConnection] Options parameter to multi-statement query to switch between labelled and positional parameters
