@@ -162,7 +162,7 @@ module.exports = (
         });
     }
 
-    function multiStmtQuery(sql, values, label) {
+    function multiStmtQuery(sql, values, label, options = {}) {
         if (poolOpts.multipleStatements !== true) {
             return Promise.reject(new Error('This pool has not been initialised with "multipleStatements: true" as an option'));
         }
@@ -171,15 +171,25 @@ module.exports = (
         return new Promise((resolve, reject) => {
             newConnection()
                 .then((connection) => {
-                    connection.config.queryFormat = bindParamLabels;
-                    const queries = values.reduce((acc, row) => acc + connection.format(sql, row), '');
+                    if (options.paramLabels) {
+                        connection.config.queryFormat = bindParamLabels;
+                    }
+                    const queries = values.reduce((acc, row) => {
+                        if (row && row.length > 0) {
+                            return acc + connection.format(sql, row);
+                        }
+
+                        return acc;
+                    }, '');
                     connection.query(queries, (err, rows) => {
                         if (err) {
                             logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
                             return reject(err);
                         }
 
-                        connection.config.queryFormat = null;
+                        if (options.paramLabels) {
+                            connection.config.queryFormat = null;
+                        }
                         releaseConnection(connection);
                         if (!Array.isArray(rows)) {
                             rows = [rows];
