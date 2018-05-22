@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - [DbConnection] Options parameter to multi-statement query to switch between labelled and positional parameters
 
+### Changed
+- [RedisConnection] Allow passing a single value to `lpush` and `rpush` without wrapping it in an array.
+
 ## [1.2.0] - 2018-05-16
 ### Added
 - Redis pub/sub commands:

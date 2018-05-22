@@ -127,8 +127,9 @@ module.exports = (
             logger.info('cache.lpush', { key });
         }
 
+        const vals = !Array.isArray(values) ? [values] : values;
         return new Promise((resolve, reject) => {
-            RedisConnector.client().lpush(key, ...values, (err, response) => {
+            RedisConnector.client().lpush(key, ...vals, (err, response) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -143,8 +144,9 @@ module.exports = (
             logger.info('cache.rpush', { key });
         }
 
+        const vals = !Array.isArray(values) ? [values] : values;
         return new Promise((resolve, reject) => {
-            RedisConnector.client().rpush(key, ...values, (err, response) => {
+            RedisConnector.client().rpush(key, ...vals, (err, response) => {
                 if (err) {
                     reject(err);
                 } else {
