@@ -241,7 +241,8 @@ module.exports = (
             logger.info('cache.subscribe', { channels });
         }
 
-        RedisConnector.client().subscribe(...channels, (err) => {
+        const chnls = !Array.isArray(channels) ? [channels] : channels;
+        RedisConnector.client().subscribe(...chnls, (err) => {
             if (err) {
                 logger.warn('cache.subscribe.fail', { message: `Failed to subscribe to channels: ${channels}` });
             }
