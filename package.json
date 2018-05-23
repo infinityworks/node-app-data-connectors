@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "moment": "^2.20.1",
-    "mysql2": "^1.5.3",
+    "mysql2": "sidorares/node-mysql2#08a3e55b27427a1f30a13123da879449d634a969",
     "node-app-base": "infinityworks/node-app-base#semver:^0.4.13",
     "redis": "^2.8.0",
     "request-promise": "^4.2.2"
