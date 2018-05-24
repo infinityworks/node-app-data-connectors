@@ -4,7 +4,7 @@ const RedisConnection = require('./src/connection/RedisConnection');
 
 const JsonApiFetch = require('./src/source/JsonApiFetch');
 
-module.exports = (logger, timers) => {
+module.exports = (logger, timers, metrics) => {
     const apiConnection = (host, port, protocol) =>
         ApiConnection(
             logger,
@@ -26,6 +26,7 @@ module.exports = (logger, timers) => {
         DbConnection(
             logger,
             timers,
+            metrics,
             host,
             port,
             username,

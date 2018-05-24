@@ -28,6 +28,7 @@ const QUEUE_LIMIT = 100;
 module.exports = (
     logger,
     timers,
+    metrics,
     host,
     port,
     user,
@@ -49,21 +50,66 @@ module.exports = (
     }, connectionOptions);
 
     const pool = mysql.createPool(poolOpts);
+    let poolSize = 0;
+    let acquiredConnections = 0;
+
+    function exportAcquiredConnectionsMetric(value) {
+        metrics.gauge({
+            name: 'connector_db_acquired_conns',
+            help: 'Number of connections currently acquired from the pool',
+            value,
+        });
+    }
+
+    pool.on('acquire', () => {
+        acquiredConnections += 1;
+        exportAcquiredConnectionsMetric(acquiredConnections);
+
+        if (enableConnectionLogging) {
+            logger.info('connector.DBConnection.acquire', { acquiredConnections });
+        }
+    });
+
+    pool.on('connection', () => {
+        poolSize += 1;
+        metrics.gauge({
+            name: 'connector_db_pool_size',
+            help: 'Current size of the DB connection pool',
+            value: poolSize,
+        });
+
+        if (enableConnectionLogging) {
+            logger.info('connector.DBConnection.connection', { poolSize });
+        }
+    });
+
+    pool.on('enqueue', () => {
+        if (enableConnectionLogging) {
+            logger.info('connector.DBConnection.enqueue');
+        }
+    });
+
+    pool.on('release', () => {
+        acquiredConnections -= 1;
+        exportAcquiredConnectionsMetric(acquiredConnections);
+
+        if (enableConnectionLogging) {
+            logger.info('connector.DBConnection.release', { acquiredConnections });
+        }
+    });
 
     logger.info('connector.DBConnection.init', {
-        message: 'new db connection',
+        message: 'new db pool created',
         host,
         port,
+        connectionLimit: poolOpts.connectionLimit,
+        queueLimit: poolOpts.queueLimit,
+        acquireTimeout: poolOpts.acquireTimeout,
+        waitForConnections: poolOpts.waitForConnections,
     });
 
     function releaseConnection(connection) {
         connection.release();
-
-        if (enableConnectionLogging) {
-            logger.info('connector.DBConnection.releaseConnection', {
-                message: 'db connection dropped',
-            });
-        }
     }
 
     function newConnection() {
@@ -72,12 +118,6 @@ module.exports = (
                 if (err) {
                     logger.error('connector.DBConnection.newConnection', err);
                     return reject(err);
-                }
-
-                if (enableConnectionLogging) {
-                    logger.info('connector.DBConnection.newConnection', {
-                        message: 'new db connection sourced from pool',
-                    });
                 }
 
                 return resolve(connection);
@@ -175,12 +215,13 @@ module.exports = (
                         connection.config.queryFormat = bindParamLabels;
                     }
                     const queries = values.reduce((acc, row) => {
-                        if (row && row.length > 0) {
+                        if (row && Object.keys(row).length > 0) {
                             return acc + connection.format(sql, row);
                         }
 
                         return acc;
                     }, '');
+
                     connection.query(queries, (err, rows) => {
                         if (err) {
                             logger.error(`${outputLabel}.multiStmtQuery`, { message: err });

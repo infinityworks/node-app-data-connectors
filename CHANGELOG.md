@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2018-05-24
+### Added
+- Re-added Prometheus metrics module to top-level module and DbConnection
+- [DbConnection] Export metrics and print out logs when key pool connection lifecycle events occur
+
+### Fixed
+- [DbConnection] Fix multi-statement query preparation when the `paramLabels` flag is set.
+
 ## [1.4.0] - 2018-05-23
 ### Changed
 - Upgraded node-mysql2 module to include support for more pool connection lifecycle events
