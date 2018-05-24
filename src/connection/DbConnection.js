@@ -53,15 +53,15 @@ module.exports = (
     let poolSize = 0;
     let acquiredConnections = 0;
 
-    function exportAcquiredConnectionsMetric(acquiredConnections) {
+    function exportAcquiredConnectionsMetric(value) {
         metrics.gauge({
             name: 'connector_db_acquired_conns',
             help: 'Number of connections currently acquired from the pool',
-            value: acquiredConnections,
+            value,
         });
     }
 
-    pool.on('acquire', (connection) => {
+    pool.on('acquire', () => {
         acquiredConnections += 1;
         exportAcquiredConnectionsMetric(acquiredConnections);
 
@@ -70,7 +70,7 @@ module.exports = (
         }
     });
 
-    pool.on('connection', (connection) => {
+    pool.on('connection', () => {
         poolSize += 1;
         metrics.gauge({
             name: 'connector_db_pool_size',
@@ -83,13 +83,13 @@ module.exports = (
         }
     });
 
-    pool.on('enqueue', (connection) => {
+    pool.on('enqueue', () => {
         if (enableConnectionLogging) {
             logger.info('connector.DBConnection.enqueue');
         }
     });
 
-    pool.on('release', (connection) => {
+    pool.on('release', () => {
         acquiredConnections -= 1;
         exportAcquiredConnectionsMetric(acquiredConnections);
 
