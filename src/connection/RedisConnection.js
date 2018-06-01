@@ -1,3 +1,4 @@
+const util = require('util');
 const redis = require('redis');
 
 module.exports = (
@@ -42,6 +43,14 @@ module.exports = (
         },
     };
 
+    // Call a Redis client function with args and return a Promise
+    function proxyPromise(funcName, args) {
+        const callArgs = Array.from(args);
+        const func = util.promisify(RedisConnector.client()[funcName])
+            .bind(RedisConnector.client());
+        return func(...callArgs);
+    }
+
     RedisConnector.disableLogs = () => {
         infoLogsEnabled = false;
     };
@@ -50,210 +59,106 @@ module.exports = (
         infoLogsEnabled = true;
     };
 
-    RedisConnector.get = (key) => {
+    RedisConnector.get = (...args) => {
         if (infoLogsEnabled) {
-            logger.info('cache.get', {
-                key,
-            });
+            const key = args[0];
+            logger.info('cache.get', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().get(key, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('get', args);
     };
 
     RedisConnector.mget = (...args) => {
-        const keys = Array.from(args);
         if (infoLogsEnabled) {
+            const keys = Array.from(args);
             logger.info('cache.mget', { keys });
         }
-        const localClient = RedisConnector.client();
-
-        return new Promise((resolve, reject) => {
-            keys.push((err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-
-            localClient.mget(...keys);
-        });
+        return proxyPromise('mget', args);
     };
 
-    RedisConnector.set = (key, value) => {
+    RedisConnector.set = (...args) => {
         if (infoLogsEnabled) {
-            logger.info('cache.set', {
-                key,
-            });
+            const key = args[0];
+            logger.info('cache.set', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().set(key, value, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('set', args);
     };
 
-    RedisConnector.delete = (key) => {
+    RedisConnector.delete = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.delete', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().del(key, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('del', args);
     };
 
-    RedisConnector.lpush = (key, values) => {
+    RedisConnector.lpush = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.lpush', { key });
         }
-
-        const vals = !Array.isArray(values) ? [values] : values;
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().lpush(key, ...vals, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('lpush', args);
     };
 
-    RedisConnector.rpush = (key, values) => {
+    RedisConnector.rpush = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.rpush', { key });
         }
-
-        const vals = !Array.isArray(values) ? [values] : values;
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().rpush(key, ...vals, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('rpush', args);
     };
 
-    RedisConnector.lpop = (key) => {
+    RedisConnector.lpop = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.lpop', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().lpop(key, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('lpop', args);
     };
 
-    RedisConnector.rpop = (key) => {
+    RedisConnector.rpop = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.rpop', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().rpop(key, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('rpop', args);
     };
 
-    RedisConnector.blpop = (key, timeout) => {
+    RedisConnector.blpop = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.blpop', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().blpop(key, timeout, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('blpop', args);
     };
 
-    RedisConnector.brpop = (key, timeout) => {
+    RedisConnector.brpop = (...args) => {
         if (infoLogsEnabled) {
+            const key = args[0];
             logger.info('cache.brpop', { key });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().brpop(key, timeout, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('brpop', args);
     };
 
-    RedisConnector.publish = (channel, value) => {
+    RedisConnector.publish = (...args) => {
         if (infoLogsEnabled) {
+            const channel = args[0];
             logger.info('cache.publish', { channel });
         }
-
-        return new Promise((resolve, reject) => {
-            RedisConnector.client().publish(channel, value, (err, response) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
+        return proxyPromise('publish', args);
     };
 
-    RedisConnector.subscribe = (channels) => {
+    RedisConnector.subscribe = (...args) => {
         if (infoLogsEnabled) {
+            const channels = args;
             logger.info('cache.subscribe', { channels });
         }
-
-        const chnls = !Array.isArray(channels) ? [channels] : channels;
-        RedisConnector.client().subscribe(...chnls, (err) => {
-            if (err) {
-                logger.warn('cache.subscribe.fail', { message: `Failed to subscribe to channels: ${channels}` });
-            }
-        });
+        return proxyPromise('subscribe', args);
     };
 
     RedisConnector.listen = (event, callback) => {
         if (infoLogsEnabled) {
             logger.info('cache.listen', { event });
         }
-
         RedisConnector.client().on(event, callback);
     };
 
