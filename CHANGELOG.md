@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2018-06-04
+### Changed
+- Promisified all Redis calls to make the Redis connector behave exactly the same as the underlying client.
+
+### Fixed
+- Remove error warn and swallowing from subscribe method, because that's
+not appropriate in a library.
+
 ## [2.0.0] - 2018-05-24
 ### Added
 - Re-added Prometheus metrics module to top-level module and DbConnection
