@@ -83,6 +83,14 @@ module.exports = (
         return proxyPromise('set', args);
     };
 
+    RedisConnector.getset = (...args) => {
+        if (infoLogsEnabled) {
+            const key = args[0];
+            logger.info('cache.getset', { key });
+        }
+        return proxyPromise('getset', args);
+    };
+
     RedisConnector.delete = (...args) => {
         if (infoLogsEnabled) {
             const key = args[0];
