@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2018-06-15
+### Added
+- [RedisConnection] Expose psubscribe command
+
 ## [2.0.2] - 2018-06-04
 ### Added
 - [RedisConnection] Expose getset command
