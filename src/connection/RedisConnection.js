@@ -163,6 +163,14 @@ module.exports = (
         return proxyPromise('subscribe', args);
     };
 
+    RedisConnector.psubscribe = (...args) => {
+        if (infoLogsEnabled) {
+            const channels = args;
+            logger.info('cache.psubscribe', { channels });
+        }
+        return proxyPromise('psubscribe', args);
+    };
+
     RedisConnector.listen = (event, callback) => {
         if (infoLogsEnabled) {
             logger.info('cache.listen', { event });
