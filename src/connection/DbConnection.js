@@ -35,7 +35,7 @@ module.exports = (
     password,
     database,
     connectionOptions = {},
-    enableConnectionLogging = false,
+    enableConnectionLogging = true,
 ) => {
     const poolOpts = Object.assign({
         host,
@@ -53,17 +53,28 @@ module.exports = (
     let poolSize = 0;
     let acquiredConnections = 0;
 
-    function exportAcquiredConnectionsMetric(value) {
-        metrics.gauge({
-            name: 'connector_db_acquired_conns',
-            help: 'Number of connections currently acquired from the pool',
-            value,
-        });
+    function exportAcquiredConnectionsMetric(acquiredConns, openConnections) {
+        //metrics.gauge({
+        //    name: 'connector_db_acquired_conns',
+        //    help: 'Number of connections currently acquired from the pool',
+        //    value,
+        //});
+
+        if (enableConnectionLogging) {
+            logger.info('connector.DBConnection.active', { activeConnections: openConnections - acquiredConns });
+        }
+
+        metrics.histogram({
+            name: 'connector_db_used_conns',
+            help: 'Response time duration distribution',
+            buckets: [ 1, 2, 5, 10, 25, 50, 75, 100, 150, 190 ],
+            value: openConnections - acquiredConns,
+        })
     }
 
     pool.on('acquire', () => {
         acquiredConnections += 1;
-        exportAcquiredConnectionsMetric(acquiredConnections);
+        exportAcquiredConnectionsMetric(acquiredConnections, poolSize);
 
         if (enableConnectionLogging) {
             logger.info('connector.DBConnection.acquire', { acquiredConnections });
@@ -91,7 +102,7 @@ module.exports = (
 
     pool.on('release', () => {
         acquiredConnections -= 1;
-        exportAcquiredConnectionsMetric(acquiredConnections);
+        exportAcquiredConnectionsMetric(acquiredConnections, poolSize);
 
         if (enableConnectionLogging) {
             logger.info('connector.DBConnection.release', { acquiredConnections });
