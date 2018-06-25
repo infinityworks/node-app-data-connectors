@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2018-06-25
+### Added
+- [DbConnection] Ability to run query as a stream
+
 ## [2.1.0] - 2018-06-15
 ### Added
 - [RedisConnection] Expose psubscribe command
