@@ -167,6 +167,20 @@ module.exports = (
         });
     }
 
+    function queryStream(sql, values = [], label) {
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
+        return new Promise((resolve, reject) => {
+            newConnection()
+                .then((connection) => {
+                    resolve([connection.query(sql, values), connection]);
+                })
+                .catch((err) => {
+                    logger.error(`${outputLabel}.sql`, err);
+                    reject(err);
+                });
+        });
+    }
+
     function labelQuery(sql, values = [], label) {
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
@@ -296,6 +310,7 @@ module.exports = (
 
     return {
         query,
+        queryStream,
         multiStmtQuery,
         labelQuery,
         bulkInsert,
