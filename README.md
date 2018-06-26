@@ -84,6 +84,40 @@ try {
 }
 ```
 
+#### queryStream(sql, values = [], label)
+
+Executes a single-statement prepared query with any number of positional parameters to substitute into the query and returns
+an array with an open Readable [`Stream`](https://nodejs.org/api/stream.html) and a reference to the underlying connection.
+
+Parameters:
+- `sql`: string containing the SQL statement to run. Any query values to escape must be replaced by question marks.
+- `values`: array of value(s) to inject into the prepared statement.
+- `label`: string containing the log key that will be used for this query
+
+Returns:
+    - `Array`
+        - Stream
+        - Connection
+
+```javascript
+const params = [1];
+const stream = await db.queryStream(
+    'SELECT * FROM `mytable` WHERE `id` = ?',
+    params,
+    'db.query',
+);
+
+stream.on('error', (err) => {
+    // handle error
+})
+.on('result', (row) => {
+    // process data row
+})
+.on('end', () => {
+    // all rows received
+});
+```
+
 #### multiStmtQuery(sql, values, label, options = {})
 
 Executes any number of prepared statements using either positional or labelled parameters.
