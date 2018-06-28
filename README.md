@@ -25,25 +25,62 @@ Import the library and then initialise each individual connector with the desire
 
 ### Connector instantiation
 
+Initialise the module by passing it some parameters inherited from node-app-base.
+
 ```js
 const DataConnectors = require('node-app-data-connectors')(logger, timers, metrics);
+```
 
-const apiConnection = DataConnectors.apiConnection(
-    config.get('SPORTSAPI_HOST'),
-    config.get('SPORTSAPI_PORT'),
-    config.get('SPORTSAPI_PROTOCOL')
-);
+#### DbConnection
+
+Parameters:
+- `host`: address of the MySQL server
+- `port`: port to connect to the MySQL server on
+- `user`: MySQL username
+- `password`: MySQL password
+- `database`: name of the database to query
+- `connectionOptions`: options object to override default DB pool options
+- `enableConnectionLogging`: log out connection lifecycle messages: creation, acquisition, release, queueing, etc.
+
+```js
 const dbConnection = DataConnectors.dbConnection(
-    config.get('DB_HOST'),
-    config.get('DB_PORT'),
-    config.get('DB_USERNAME'),
-    config.get('DB_PASSWORD'),
-    config.get('DB_NAME'),
+    'sql.server',
+    3306,
+    'test',
+    'testpassword',
+    'db_name',
+    { acquireTimeout: 1000 }
 );
+```
+
+#### RedisConnection
+
+Parameters:
+- `host`: address of the Redis server
+- `port`: port number to establish the Redis connection
+- `dbIndex`: Redis database index
+- `enableInfoLogs`: enable INFO level logs to be printed from the source
+
+```js
 const redisConnection = DataConnectors.redisConnection(
-    config.get('REDIS_HOST'),
-    config.get('REDIS_PORT'),
-    config.get('REDIS_DB_INDEX'),
+    'redis.host',
+    6379,
+    1
+);
+```
+
+#### ApiConnection
+
+Parameters:
+- `host`: domain name of the host serving the API.
+- `port`: port to establish the HTTP connection on, namely `80` or `443`.
+- `protocol`: whether HTTP or HTTPS should be used. Accepted values are `http` or `https`.
+
+```js
+const apiConnection = DataConnectors.apiConnection(
+    'service.api.com',
+    443,
+    'https'
 );
 const jsonApiFetch = DataConnectors.jsonApiFetch(apiConnection);
 ```
@@ -60,6 +97,8 @@ healthCheck.initListener(healthCheckCallback());
 ## Usage
 
 ### DbConnection
+
+MySQL database adapter.
 
 #### query(sql, values = [], label)
 
@@ -87,7 +126,9 @@ try {
 #### queryStream(sql, values = [], label)
 
 Executes a single-statement prepared query with any number of positional parameters to substitute into the query and returns
-an array with an open Readable [`Stream`](https://nodejs.org/api/stream.html) and a reference to the underlying connection.
+an array with a reference to the open channel with the database and a reference to the underlying connection. Calling `stream()` on the returned channel returns a `stream.Readable`.
+
+Note: this function gives the caller ownership of the underlying connection, which means the connection must be closed by the caller manually when the operation is finished.
 
 Parameters:
 - `sql`: string containing the SQL statement to run. Any query values to escape must be replaced by question marks.
@@ -95,9 +136,9 @@ Parameters:
 - `label`: string containing the log key that will be used for this query
 
 Returns:
-    - `Array`
-        - Stream
-        - Connection
+- `Array`
+    - `EventEmitter`
+    - Connection
 
 ```javascript
 const params = [1];
@@ -115,6 +156,8 @@ stream.on('error', (err) => {
 })
 .on('end', () => {
     // all rows received
+    // release the connection back into the pool
+    connection.release();
 });
 ```
 
@@ -192,3 +235,46 @@ try {
 }
 ```
 
+### RedisConnection
+
+The Redis adapter exposes the same public calls as the underlying Redis client. For a list of all supported Redis commands, see `RedisConnection.js`.
+
+### ApiConnection
+
+HTTP REST API client.
+
+#### get(path[, qs, transactionId])
+
+Send a HTTP request to a remote REST API endpoint.
+
+Parameters:
+- `path`: path section of the endpoint URI (without the URI scheme and domain name)
+- `qs`: request query string object (for HTTP GET requests)
+- `transactionId`: unique request identifier
+
+```js
+apiConnection.get('/v2/user/1', { token: 'sometoken' })
+    .then((response) => {
+        return response;
+    })
+    .catch((err) => {
+        return Promise.reject(err);
+    });
+```
+
+### JsonApiFetch
+
+JSON wrapper around the generic `ApiConnection` adapter.
+
+#### fetchFromJsonApi(apiPath[, qsObj, transactionId])
+
+Parameters:
+- `apiPath`: path section of the endpoint URI (without the URI scheme and domain name)
+- `qsObj`: request query string object (for HTTP GET requests)
+- `transactionId`: unique request identifier
+
+```js
+// Both Promise and ES7 async/await forms are supported
+const response = await jsonApi.fetchFromJsonApi('/v2/user/1', { token: 'sometoken' });
+return JSON.parse(response);
+```
