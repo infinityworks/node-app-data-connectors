@@ -147,6 +147,14 @@ module.exports = (
         return proxyPromise('brpop', args);
     };
 
+    RedisConnector.llen = (...args) => {
+        if (infoLogsEnabled) {
+            const key = args[0];
+            logger.info('cache.llen', { key });
+        }
+        return proxyPromise('llen', args);
+    };
+
     RedisConnector.publish = (...args) => {
         if (infoLogsEnabled) {
             const channel = args[0];

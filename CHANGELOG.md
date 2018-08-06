@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2018-08-06
+### Added
+- [RedisConnection] Add `llen` command
+
 ## [2.2.0] - 2018-06-25
 ### Added
 - [DbConnection] Ability to run query as a stream
