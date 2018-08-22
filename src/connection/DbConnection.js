@@ -269,6 +269,7 @@ module.exports = (
                     connection.query(sql, [values], (err) => {
                         if (err) {
                             logger.error(`${outputLabel}.bulkInsert`, err);
+                            connection.destroy();
                             return reject(err);
                         }
                         releaseConnection(connection);
@@ -289,6 +290,7 @@ module.exports = (
                     connection.query('SELECT 1', null, (err, rows) => {
                         if (err) {
                             logger.error('connector.DBConnection.unhealthy', { message: err.message });
+                            connection.destroy();
                             return reject(err);
                         }
                         releaseConnection(connection);
