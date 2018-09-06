@@ -193,6 +193,7 @@ module.exports = (
                     connection.query(formattedSql, values, (err, rows) => {
                         const duration = timers.stop(startToken);
                         if (err) {
+                            connection.destroy();
                             logger.error(`${outputLabel}.sql`, err);
                             return reject(err);
                         }
@@ -238,6 +239,7 @@ module.exports = (
 
                     connection.query(queries, (err, rows) => {
                         if (err) {
+                            connection.destroy();
                             logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
                             return reject(err);
                         }
