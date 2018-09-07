@@ -193,6 +193,7 @@ module.exports = (
                     connection.query(formattedSql, values, (err, rows) => {
                         const duration = timers.stop(startToken);
                         if (err) {
+                            connection.destroy();
                             logger.error(`${outputLabel}.sql`, err);
                             return reject(err);
                         }
@@ -238,6 +239,7 @@ module.exports = (
 
                     connection.query(queries, (err, rows) => {
                         if (err) {
+                            connection.destroy();
                             logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
                             return reject(err);
                         }
@@ -269,6 +271,7 @@ module.exports = (
                     connection.query(sql, [values], (err) => {
                         if (err) {
                             logger.error(`${outputLabel}.bulkInsert`, err);
+                            connection.destroy();
                             return reject(err);
                         }
                         releaseConnection(connection);
@@ -289,6 +292,7 @@ module.exports = (
                     connection.query('SELECT 1', null, (err, rows) => {
                         if (err) {
                             logger.error('connector.DBConnection.unhealthy', { message: err.message });
+                            connection.destroy();
                             return reject(err);
                         }
                         releaseConnection(connection);
