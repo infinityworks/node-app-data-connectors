@@ -123,6 +123,38 @@ try {
 }
 ```
 
+#### transactionQuery(sqls, values = [], label)
+
+Executes any number of prepared statements using either positional or labelled parameters, within a single transaction that is automatically rolled back on failure.
+
+Parameters:
+- `sqls`: array of strings containing the SQL statements to run. Any query values to escape must be replaced by question marks.
+- `values`: array of array of value(s) to inject into the prepared statement.
+- `label`: string containing the log key that will be used for this query
+
+```javascript
+let result = [];
+try {
+    const queries = [
+        'UPDATE user SET password = ? WHERE id = ?',
+        'INSERT INTO audit (type, date) VALUES ('passwordChange', NOW())',
+    ];
+    const values = [
+        ['password123', '1337'],
+        [],
+    ];
+
+    result = await db.transactionQuery(
+        values,
+        'db.query',
+    );
+
+    // result is an array of rows
+} catch (e) {
+    // error
+}
+```
+
 #### queryStream(sql, values = [], label)
 
 Executes a single-statement prepared query with any number of positional parameters to substitute into the query and returns
