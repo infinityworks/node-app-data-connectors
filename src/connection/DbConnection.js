@@ -1,5 +1,6 @@
 /* eslint no-param-reassign: 1 */
 
+const util = require('util');
 const mysql = require('mysql2');
 
 const DEFAULT_OUTPUT_LABEL = 'connector.DBConnection';
@@ -167,6 +168,77 @@ module.exports = (
         });
     }
 
+    async function transactionQuery(sqls, multiValues = [], label) {
+        if (!sqls || !sqls.length) {
+            throw new Error('No queries provided');
+        }
+
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
+        const startToken = timers.start();
+
+        let connection;
+        try {
+            connection = await newConnection();
+        } catch (err) {
+            logger.error(`${outputLabel}.sql.connectionFailure`, err);
+            connection.destroy();
+            throw err;
+        }
+
+        // Promisified methods. Must be attached to keep 'this' context.
+        ['beginTransaction', 'query', 'rollback', 'commit'].forEach((method) => {
+            connection[`${method}Promise`] =
+                util.promisify(connection[method]);
+        });
+
+        try {
+            await connection.beginTransactionPromise();
+        } catch (err) {
+            logger.error(`${outputLabel}.sql.beginTransactionFailure`, err);
+            connection.destroy();
+            throw err;
+        }
+
+        const queryResults = [];
+
+        try {
+            for (let i = 0; i < sqls.length; i += 1) {
+                const sql = sqls[i];
+                const queryValues = multiValues[i];
+                const rows = await connection.queryPromise(
+                    sql,
+                    queryValues,
+                ); /* eslint no-await-in-loop: 0 */
+                queryResults.push(rows);
+            }
+        } catch (err) {
+            logger.error(`${outputLabel}.sql.queryFailure`, err);
+            try {
+                await connection.rollbackPromise();
+            } catch (rollbackErr) {
+                logger.error(`${outputLabel}.sql.rollbackFailure`, rollbackErr);
+                connection.destroy();
+                throw rollbackErr;
+            }
+            connection.destroy();
+            throw err;
+        }
+
+        try {
+            await connection.commitPromise();
+        } catch (err) {
+            logger.error(`${outputLabel}.sql.commitFailure`, err);
+            connection.destroy();
+            throw err;
+        }
+
+        const duration = timers.stop(startToken);
+        logger.info(`${outputLabel}.query.complete`, { duration });
+        connection.release();
+
+        return queryResults;
+    }
+
     function queryStream(sql, values = [], label) {
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
@@ -314,6 +386,7 @@ module.exports = (
 
     return {
         query,
+        transactionQuery,
         queryStream,
         multiStmtQuery,
         labelQuery,
