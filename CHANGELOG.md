@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.0] - 2018-11-22
+### Changed
+- Upgrade all dependencies
+
 ## [2.4.0] - 2018-11-01
 ### Added
 - [DbConnection] Add `transactionQuery` command
