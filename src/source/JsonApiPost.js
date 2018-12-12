@@ -1,15 +1,15 @@
 const moment = require('moment');
 
 module.exports = (logger, connection) => {
-    async function fetchFromJsonApi(apiPath, qsObj, transactionId) {
+    async function postToJsonApi(apiPath, bodyObj, transactionId) {
         const startTime = moment();
 
-        return connection.get(apiPath.replace(/^\/|\/$/g, ''), qsObj, transactionId)
+        return connection.post(apiPath.replace(/^\/|\/$/g, ''), bodyObj, transactionId)
             .then((response) => {
                 const duration = moment().diff(startTime);
 
                 logger.info(
-                    'FetchFromRemote.fetchFromJsonApi.response',
+                    'FetchFromRemote.postToJsonApi.response',
                     {
                         length: response.length,
                         transactionId,
@@ -20,7 +20,7 @@ module.exports = (logger, connection) => {
                 // check if response is falsy before trying to parse
                 if (!response) {
                     logger.warn(
-                        'FetchFromRemote.fetchFromJsonApi.failed',
+                        'FetchFromRemote.postToJsonApi.failed',
                         { message: `invalid response from API ${response}`, transactionId },
                     );
 
@@ -31,7 +31,7 @@ module.exports = (logger, connection) => {
                     return JSON.parse(response);
                 } catch (e) {
                     logger.warn(
-                        'FetchFromRemote.fetchFromJsonApi.failed',
+                        'FetchFromRemote.postToJsonApi.failed',
                         { message: `unable to parse JSON response ${response}`, transactionId },
                     );
                     return Promise.reject(e);
@@ -39,12 +39,12 @@ module.exports = (logger, connection) => {
             })
             .catch((err) => {
                 logger.warn(
-                    'FetchFromRemote.fetchFromJsonApi.failed',
+                    'FetchFromRemote.postToJsonApi.failed',
                     { message: err, transactionId },
                 );
                 return Promise.reject(err);
             });
     }
 
-    return { fetchFromJsonApi };
+    return { postToJsonApi };
 };
