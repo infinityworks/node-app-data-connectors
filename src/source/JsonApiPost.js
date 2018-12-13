@@ -9,11 +9,15 @@ module.exports = (logger, connection) => {
       .then(response => {
         const duration = moment().diff(startTime);
 
+        // response is already parsed
+        const length = JSON.stringify(response).length;
+
         logger.info('FetchFromRemote.postToJsonApi.response', {
-          length: response.length,
+          length,
           transactionId,
           duration
         });
+
         return response;
       })
       .catch(err => {

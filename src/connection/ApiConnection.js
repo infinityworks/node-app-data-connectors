@@ -46,8 +46,7 @@ module.exports = (logger, timers, host, port, protocol) => {
             gzip: true,
             timeout: 10000, // max ms before request is aborted
             json: true,
-            body,
-            resolveWithFullResponse: true
+            body
         };
 
         const startToken = timers.start();
@@ -61,6 +60,12 @@ module.exports = (logger, timers, host, port, protocol) => {
                 return data;
             })
             .catch((err) => {
+                // err from requestPromise contains the original request options
+                // which could include sensitive data in the body, so unset it
+                // to prevent logging
+                if (err.options.body) {
+                    err.options.body = '_REDACTED_';
+                }
                 logger.info('lib.ApiConnection.post', {
                     message: 'request failed',
                     uri: requestParams.uri,
