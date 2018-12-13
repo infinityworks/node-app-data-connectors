@@ -1,50 +1,31 @@
 const moment = require('moment');
 
 module.exports = (logger, connection) => {
-    async function postToJsonApi(apiPath, bodyObj, transactionId) {
-        const startTime = moment();
+  async function postToJsonApi(apiPath, bodyObj, transactionId) {
+    const startTime = moment();
+    const request = connection.post( apiPath.replace(/^\/|\/$/g, ''), bodyObj, transactionId);
 
-        return connection.post(apiPath.replace(/^\/|\/$/g, ''), bodyObj, transactionId)
-            .then((response) => {
-                const duration = moment().diff(startTime);
+    return request
+      .then(response => {
+        const duration = moment().diff(startTime);
 
-                logger.info(
-                    'FetchFromRemote.postToJsonApi.response',
-                    {
-                        length: response.length,
-                        transactionId,
-                        duration,
-                    },
-                );
+        logger.info('FetchFromRemote.postToJsonApi.response', {
+          length: response.length,
+          transactionId,
+          duration
+        });
+        return response;
+      })
+      .catch(err => {
 
-                // check if response is falsy before trying to parse
-                if (!response) {
-                    logger.warn(
-                        'FetchFromRemote.postToJsonApi.failed',
-                        { message: `invalid response from API ${response}`, transactionId },
-                    );
+        logger.warn('FetchFromRemote.postToJsonApi.failed', {
+          message: err,
+          transactionId
+        });
 
-                    return Promise.reject(new Error('invalid response from API'));
-                }
+        return Promise.reject(err);
+      });
+  }
 
-                try {
-                    return JSON.parse(response);
-                } catch (e) {
-                    logger.warn(
-                        'FetchFromRemote.postToJsonApi.failed',
-                        { message: `unable to parse JSON response ${response}`, transactionId },
-                    );
-                    return Promise.reject(e);
-                }
-            })
-            .catch((err) => {
-                logger.warn(
-                    'FetchFromRemote.postToJsonApi.failed',
-                    { message: err, transactionId },
-                );
-                return Promise.reject(err);
-            });
-    }
-
-    return { postToJsonApi };
+  return { postToJsonApi };
 };
