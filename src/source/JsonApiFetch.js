@@ -21,10 +21,10 @@ module.exports = (logger, connection) => {
                 if (!response) {
                     logger.warn(
                         'FetchFromRemote.fetchFromJsonApi.failed',
-                        { message: `invalid response from sports API ${response}`, transactionId },
+                        { message: `invalid response from API ${response}`, transactionId },
                     );
 
-                    return Promise.reject(new Error('invalid response from sports API'));
+                    return Promise.reject(new Error('invalid response from API'));
                 }
 
                 try {

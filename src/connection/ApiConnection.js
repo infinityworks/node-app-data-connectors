@@ -36,5 +36,46 @@ module.exports = (logger, timers, host, port, protocol) => {
             });
     }
 
-    return { get };
+    function post(path, body, transactionId) {
+        const requestParams = {
+            method: 'POST',
+            uri: `${protocol}://${host}:${port}/${path}`,
+            headers: {
+                Accept: 'application/json',
+            },
+            gzip: true,
+            timeout: 10000, // max ms before request is aborted
+            json: true,
+            body
+        };
+
+        const startToken = timers.start();
+
+        return requestPromise(requestParams)
+            .then((data) => {
+                const duration = timers.stop(startToken);
+                logger.info('lib.ApiConnection.post.done', {
+                    duration,
+                });
+                return data;
+            })
+            .catch((err) => {
+                // err from requestPromise contains the original request options
+                // which could include sensitive data in the body, so unset it
+                // to prevent logging
+                if (err.options.body) {
+                    err.options.body = '_REDACTED_';
+                }
+                logger.info('lib.ApiConnection.post', {
+                    message: 'request failed',
+                    uri: requestParams.uri,
+                    err,
+                    transactionId,
+                });
+                return Promise.reject(err);
+            });
+    }
+    return { get, post };
 };
+
+
