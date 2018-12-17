@@ -46,7 +46,7 @@ module.exports = (logger, timers, host, port, protocol) => {
             gzip: true,
             timeout: 10000, // max ms before request is aborted
             json: true,
-            body
+            body,
         };
 
         const startToken = timers.start();
@@ -63,19 +63,18 @@ module.exports = (logger, timers, host, port, protocol) => {
                 // err from requestPromise contains the original request options
                 // which could include sensitive data in the body, so unset it
                 // to prevent logging
-                if (err.options.body) {
-                    err.options.body = '_REDACTED_';
+                const newErr = { ...err }; // clone
+                if (newErr.options.body) {
+                    newErr.options.body = '_REDACTED_';
                 }
                 logger.info('lib.ApiConnection.post', {
                     message: 'request failed',
                     uri: requestParams.uri,
-                    err,
+                    err: newErr,
                     transactionId,
                 });
-                return Promise.reject(err);
+                return Promise.reject(newErr);
             });
     }
     return { get, post };
 };
-
-
