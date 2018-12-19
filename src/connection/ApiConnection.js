@@ -43,9 +43,16 @@ module.exports = (logger, timers, host, port, protocol) => {
         if (requestHeaders) {
             headers = requestHeaders;
         }
+        let uri = `${protocol}://${host}`;
+        if (port) {
+            uri += `:${port}`;
+        }
+        if (path) {
+            uri += `/${path}`;
+        }
         const requestParams = {
             method: 'POST',
-            uri: `${protocol}://${host}:${port}/${path}`,
+            uri,
             headers,
             gzip: true,
             timeout: 10000, // max ms before request is aborted
