@@ -36,13 +36,17 @@ module.exports = (logger, timers, host, port, protocol) => {
             });
     }
 
-    function post(path, body, transactionId) {
+    function post(path, body, transactionId, requestHeaders) {
+        let headers = {
+            Accept: 'application/json',
+        };
+        if (requestHeaders) {
+            headers = requestHeaders;
+        }
         const requestParams = {
             method: 'POST',
             uri: `${protocol}://${host}:${port}/${path}`,
-            headers: {
-                Accept: 'application/json',
-            },
+            headers,
             gzip: true,
             timeout: 10000, // max ms before request is aborted
             json: true,

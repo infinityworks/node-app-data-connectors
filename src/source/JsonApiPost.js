@@ -1,12 +1,13 @@
 const moment = require('moment');
 
 module.exports = (logger, connection) => {
-    async function postToJsonApi(apiPath, bodyObj, transactionId) {
+    async function postToJsonApi(apiPath, bodyObj, transactionId, headers) {
         const startTime = moment();
         const request = connection.post(
             apiPath.replace(/^\/|\/$/g, ''),
             bodyObj,
             transactionId,
+            headers,
         );
 
         return request
