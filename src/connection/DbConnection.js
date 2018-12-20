@@ -140,26 +140,43 @@ module.exports = (
         });
     }
 
-    function query(sql, values = [], label) {
+    function query(sql, values = [], label, options = {}) {
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
             const startToken = timers.start();
             newConnection()
                 .then((connection) => {
-                    connection.query(sql, values, (err, rows) => {
-                        const duration = timers.stop(startToken);
-                        if (err) {
-                            logger.error(`${outputLabel}.sql`, err);
-                            connection.destroy();
-                            return reject(err);
-                        }
-                        logger.info(`${outputLabel}.query.done`, {
-                            duration,
-                            count: rows.length,
+                    if (options.asPreparedStatement) {
+                        connection.execute(sql, values, (err, rows) => {
+                            const duration = timers.stop(startToken);
+                            if (err) {
+                                logger.error(`${outputLabel}.prepared.sql`, err);
+                                connection.destroy();
+                                return reject(err);
+                            }
+                            logger.info(`${outputLabel}.prepared.query.done`, {
+                                duration,
+                                count: rows.length,
+                            });
+                            releaseConnection(connection);
+                            return resolve(rows);
                         });
-                        releaseConnection(connection);
-                        return resolve(rows);
-                    });
+                    } else {
+                        connection.query(sql, values, (err, rows) => {
+                            const duration = timers.stop(startToken);
+                            if (err) {
+                                logger.error(`${outputLabel}.sql`, err);
+                                connection.destroy();
+                                return reject(err);
+                            }
+                            logger.info(`${outputLabel}.query.done`, {
+                                duration,
+                                count: rows.length,
+                            });
+                            releaseConnection(connection);
+                            return resolve(rows);
+                        });
+                    }
                 })
                 .catch((err) => {
                     logger.error(`${outputLabel}.sql`, err);
@@ -335,20 +352,32 @@ module.exports = (
     }
 
     // TODO -- Use transactions? connection.beginTransaction ...
-    function bulkInsert(sql, values, label) {
+    function bulkInsert(sql, values, label, options = {}) {
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
         return new Promise((resolve, reject) => {
             newConnection()
                 .then((connection) => {
-                    connection.query(sql, [values], (err) => {
-                        if (err) {
-                            logger.error(`${outputLabel}.bulkInsert`, err);
-                            connection.destroy();
-                            return reject(err);
-                        }
-                        releaseConnection(connection);
-                        return resolve(true);
-                    });
+                    if (options.asPreparedStatement) {
+                        connection.execute(sql, [values], (err) => {
+                            if (err) {
+                                logger.error(`${outputLabel}.bulkInsert`, err);
+                                connection.destroy();
+                                return reject(err);
+                            }
+                            releaseConnection(connection);
+                            return resolve(true);
+                        });
+                    } else {
+                        connection.query(sql, [values], (err) => {
+                            if (err) {
+                                logger.error(`${outputLabel}.bulkInsert`, err);
+                                connection.destroy();
+                                return reject(err);
+                            }
+                            releaseConnection(connection);
+                            return resolve(true);
+                        });
+                    }
                 })
                 .catch((err) => {
                     logger.error(`${outputLabel}.bulkInsert`, err);
@@ -392,5 +421,7 @@ module.exports = (
         labelQuery,
         bulkInsert,
         isHealthy,
+        escape: mysql.escape,
+        escapeId: mysql.escapeId,
     };
 };
