@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.6.0] - 2018-12-20
+### Added
+- [DbConnection] Add `options` object to `query` and `bulkInsert` functions
+- [DbConnection] Add ability to run `query` and `bulkInsert` as prepared statements on the database via prepare and execute SQL commands
+- [DbConnection] Expose `escape` and `escapeId` helper functions from `mysql` library
+
 ## [2.5.0] - 2018-11-22
 ### Changed
 - Upgrade all dependencies

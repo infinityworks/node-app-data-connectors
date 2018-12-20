@@ -1,6 +1,6 @@
 {
   "name": "node-app-data-connectors",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Collection of libraries to provide an easy interface to common data sources",
   "main": "index.js",
   "dependencies": {
