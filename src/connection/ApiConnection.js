@@ -36,13 +36,7 @@ module.exports = (logger, timers, host, port, protocol) => {
             });
     }
 
-    function post(path, body, transactionId, requestHeaders) {
-        let headers = {
-            Accept: 'application/json',
-        };
-        if (requestHeaders) {
-            headers = requestHeaders;
-        }
+    function post(path, body, transactionId, headers = { Accept: 'application/json' }, json = true, rejectUnauthorized = true) {
         let uri = `${protocol}://${host}`;
         if (port) {
             uri += `:${port}`;
@@ -56,8 +50,9 @@ module.exports = (logger, timers, host, port, protocol) => {
             headers,
             gzip: true,
             timeout: 10000, // max ms before request is aborted
-            json: true,
+            json,
             body,
+            rejectUnauthorized,
         };
 
         const startToken = timers.start();
