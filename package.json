@@ -5,10 +5,10 @@
   "main": "index.js",
   "dependencies": {
     "moment": "^2.22.2",
-    "mysql2": "github:sidorares/node-mysql2#semver:^1.6.4",
-    "node-app-base": "github:infinityworks/node-app-base#semver:^0.4.13",
+    "mysql2": "github:sidorares/node-mysql2#semver:^1.6.5",
+    "node-app-base": "github:infinityworks/node-app-base#semver:^0.4.16",
     "redis": "^2.8.0",
-    "request-promise": "^4.2.2"
+    "request-promise": "^4.2.4"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.6",
@@ -19,7 +19,7 @@
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.11.1",
     "mocha": "^5.2.0",
-    "nyc": "^11.9.0",
+    "nyc": "^14.1.1",
     "sinon": "^4.5.0"
   },
   "scripts": {
