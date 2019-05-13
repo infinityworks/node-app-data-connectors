@@ -13,9 +13,6 @@ const DEFAULT_OUTPUT_LABEL = 'connector.DBConnection';
 // They're lazily loaded
 const CONNECTION_LIMIT = 200;
 
-// Milliseconds to wait to be allocated a connection from the pool
-const ACQUIRE_TIMEOUT = 1000;
-
 // If set to `true`, the driver will queue up any newly requested connections if the amount
 // exceeds the current connection limit.
 // If `false`, the driver will immediately error out when it runs out of connections. This is to
@@ -46,7 +43,6 @@ module.exports = (
         database,
         connectionLimit: CONNECTION_LIMIT,
         queueLimit: QUEUE_LIMIT,
-        acquireTimeout: ACQUIRE_TIMEOUT,
         waitForConnections: WAIT_FOR_CONNECTIONS,
     }, connectionOptions);
 
@@ -338,7 +334,7 @@ module.exports = (
                         }
                         releaseConnection(connection);
                         if (!Array.isArray(rows)) {
-                            rows = [rows];
+                            return resolve([rows]);
                         }
 
                         return resolve(rows);
