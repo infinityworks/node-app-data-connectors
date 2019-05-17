@@ -1,15 +1,13 @@
 const requestPromise = require('request-promise');
 
 module.exports = (logger, timers, host, port, protocol) => {
-    function get(path, qs, transactionId) {
+    function get(path, qs, transactionId, headers = { Accept: 'application/json' }) {
         const requestParams = {
             uri: `${protocol}://${host}:${port}/${path}`,
             qsStringifyOptions: {
                 arrayFormat: 'repeat',
             },
-            headers: {
-                Accept: 'application/json',
-            },
+            headers,
             gzip: true,
             timeout: 10000, // max ms before request is aborted
             qs,
@@ -82,5 +80,9 @@ module.exports = (logger, timers, host, port, protocol) => {
                 return Promise.reject(newErr);
             });
     }
-    return { get, post };
+
+    return {
+        get,
+        post,
+    };
 };
