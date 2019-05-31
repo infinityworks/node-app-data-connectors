@@ -1,9 +1,14 @@
 const requestPromise = require('request-promise');
 
-module.exports = (logger, timers, host, port, protocol) => {
-    function get(path, qs, transactionId, headers = { Accept: 'application/json' }) {
+module.exports = (wrappers, host, port, protocol) => {
+    let baseUrl = `${protocol}://${host}`;
+    if (port) {
+        baseUrl += `:${port}`;
+    }
+
+    async function get(path, qs, label, headers = { Accept: 'application/json' }) {
         const requestParams = {
-            uri: `${protocol}://${host}:${port}/${path}`,
+            uri: `${baseUrl}/${path}`,
             qsStringifyOptions: {
                 arrayFormat: 'repeat',
             },
@@ -13,38 +18,15 @@ module.exports = (logger, timers, host, port, protocol) => {
             qs,
         };
 
-        const startToken = timers.start();
-
-        return requestPromise(requestParams)
-            .then((data) => {
-                const duration = timers.stop(startToken);
-                logger.info('lib.ApiConnection.query.done', {
-                    duration,
-                });
-                return data;
-            })
-            .catch((err) => {
-                logger.info('lib.ApiConnection.get', {
-                    message: 'request failed',
-                    uri: requestParams.uri,
-                    err,
-                    transactionId,
-                });
-                return Promise.reject(err);
-            });
+        return wrappers.logsAndTimer(label, async () => {
+            return requestPromise(requestParams);
+        });
     }
 
-    function post(path, body, transactionId, headers = { Accept: 'application/json' }, json = true, rejectUnauthorized = true) {
-        let uri = `${protocol}://${host}`;
-        if (port) {
-            uri += `:${port}`;
-        }
-        if (path) {
-            uri += `/${path}`;
-        }
+    async function post(path, body, label, headers = { Accept: 'application/json' }, json = true, rejectUnauthorized = true) {
         const requestParams = {
             method: 'POST',
-            uri,
+            uri: `${baseUrl}/${path}`,
             headers,
             gzip: true,
             timeout: 10000, // max ms before request is aborted
@@ -53,17 +35,10 @@ module.exports = (logger, timers, host, port, protocol) => {
             rejectUnauthorized,
         };
 
-        const startToken = timers.start();
-
-        return requestPromise(requestParams)
-            .then((data) => {
-                const duration = timers.stop(startToken);
-                logger.info('lib.ApiConnection.post.done', {
-                    duration,
-                });
-                return data;
-            })
-            .catch((err) => {
+        return wrappers.logsAndTimer(label, async () => {
+            try {
+                return await requestPromise(requestParams);
+            } catch (err) {
                 // err from requestPromise contains the original request options
                 // which could include sensitive data in the body, so unset it
                 // to prevent logging
@@ -71,14 +46,9 @@ module.exports = (logger, timers, host, port, protocol) => {
                 if (newErr.options.body) {
                     newErr.options.body = '_REDACTED_';
                 }
-                logger.info('lib.ApiConnection.post', {
-                    message: 'request failed',
-                    uri: requestParams.uri,
-                    err: newErr,
-                    transactionId,
-                });
-                return Promise.reject(newErr);
-            });
+                throw newErr;
+            }
+        });
     }
 
     return {

@@ -1,6 +1,5 @@
 /* eslint no-param-reassign: 1 */
 
-const util = require('util');
 const mysql = require('mysql2');
 
 const DEFAULT_OUTPUT_LABEL = 'connector.DBConnection';
@@ -24,8 +23,8 @@ const WAIT_FOR_CONNECTIONS = false;
 const QUEUE_LIMIT = 100;
 
 module.exports = (
+    wrappers,
     logger,
-    timers,
     metrics,
     host,
     port,
@@ -105,21 +104,23 @@ module.exports = (
         waitForConnections: poolOpts.waitForConnections,
     });
 
-    function releaseConnection(connection) {
-        connection.release();
+    function getMetaInfo(connection) {
+        return result => ({
+            connectionId: connection.threadId || 'pool',
+            count: result.length,
+        });
     }
 
-    function newConnection() {
-        return new Promise((resolve, reject) => {
-            pool.getConnection((err, connection) => {
-                if (err) {
-                    logger.error('connector.DBConnection.newConnection', err);
-                    return reject(err);
-                }
-
-                return resolve(connection);
-            });
-        });
+    async function newConnection(outputLabel) {
+        try {
+            return await pool.getConnection();
+        } catch (err) {
+            logger.error('connector.DBConnection.newConnection', err);
+            if (outputLabel) {
+                logger.error(`${outputLabel}.connectionFailure`, err);
+            }
+            throw err;
+        }
     }
 
     function bindParamLabels(sql, values) {
@@ -136,286 +137,93 @@ module.exports = (
         });
     }
 
-    function query(sql, values = [], label, options = {}) {
+    async function queryWithConnection(connection, sql, values = [], label) {
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
-        return new Promise((resolve, reject) => {
-            const startToken = timers.start();
-            newConnection()
-                .then((connection) => {
-                    if (options.asPreparedStatement) {
-                        connection.execute(sql, values, (err, rows) => {
-                            const duration = timers.stop(startToken);
-                            if (err) {
-                                logger.error(`${outputLabel}.prepared.sql`, err);
-                                connection.destroy();
-                                return reject(err);
-                            }
-                            logger.info(`${outputLabel}.prepared.query.done`, {
-                                duration,
-                                count: rows.length,
-                            });
-                            releaseConnection(connection);
-                            return resolve(rows);
-                        });
-                    } else {
-                        connection.query(sql, values, (err, rows) => {
-                            const duration = timers.stop(startToken);
-                            if (err) {
-                                logger.error(`${outputLabel}.sql`, err);
-                                connection.destroy();
-                                return reject(err);
-                            }
-                            logger.info(`${outputLabel}.query.done`, {
-                                duration,
-                                count: rows.length,
-                            });
-                            releaseConnection(connection);
-                            return resolve(rows);
-                        });
-                    }
-                })
-                .catch((err) => {
-                    logger.error(`${outputLabel}.sql`, err);
-                    reject(err);
-                });
-        });
+
+        return wrappers.logsAndTimer(
+            outputLabel,
+            async () => {
+                const [rows] = await connection.promise().execute(sql, values);
+                return rows;
+            },
+            getMetaInfo(connection),
+        );
     }
 
-    async function transactionQuery(sqls, multiValues = [], label) {
-        if (!sqls || !sqls.length) {
-            throw new Error('No queries provided');
-        }
-
+    async function query(sql, values = [], label) {
+        return queryWithConnection(pool, sql, values, label);
+    }
+    async function withinConnection(callback, label) {
         const outputLabel = label || DEFAULT_OUTPUT_LABEL;
-        const startToken = timers.start();
 
-        let connection;
-        try {
-            connection = await newConnection();
-        } catch (err) {
-            logger.error(`${outputLabel}.sql.connectionFailure`, err);
-            connection.destroy();
-            throw err;
-        }
+        return wrappers.logsAndTimer(
+            outputLabel,
+            async () => {
+                const connection = await newConnection(outputLabel);
 
-        // Promisified methods. Must be attached to keep 'this' context.
-        ['beginTransaction', 'query', 'rollback', 'commit'].forEach((method) => {
-            connection[`${method}Promise`] =
-                util.promisify(connection[method]);
-        });
+                try {
+                    const results = await callback(connection);
+                    connection.release();
+                    return results;
+                } catch (err) {
+                    connection.destroy();
+                    throw err;
+                }
+            },
+        );
+    }
 
-        try {
-            await connection.beginTransactionPromise();
-        } catch (err) {
-            logger.error(`${outputLabel}.sql.beginTransactionFailure`, err);
-            connection.destroy();
-            throw err;
-        }
+    async function withinTransaction(callback, label) {
+        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
+        return withinConnection(async (connection) => {
+            await queryWithConnection(connection, 'BEGIN TRANSACTION', [], `${outputLabel}.beginTransaction`);
 
-        const queryResults = [];
-
-        try {
-            for (let i = 0; i < sqls.length; i += 1) {
-                const sql = sqls[i];
-                const queryValues = multiValues[i];
-                const rows = await connection.queryPromise(
-                    sql,
-                    queryValues,
-                ); /* eslint no-await-in-loop: 0 */
-                queryResults.push(rows);
-            }
-        } catch (err) {
-            logger.error(`${outputLabel}.sql.queryFailure`, err);
             try {
-                await connection.rollbackPromise();
-            } catch (rollbackErr) {
-                logger.error(`${outputLabel}.sql.rollbackFailure`, rollbackErr);
-                connection.destroy();
-                throw rollbackErr;
+                const results = await callback(connection);
+                await queryWithConnection(connection, 'COMMIT', [], `${outputLabel}.commit`);
+                return results;
+            } catch (err) {
+                await queryWithConnection(connection, 'ROLLBACK', [], `${outputLabel}.rollback`);
+                throw err;
             }
-            connection.destroy();
-            throw err;
-        }
+        }, outputLabel);
+    }
 
+    async function labelQuery(sql, values = [], label) {
+        return withinConnection(async (connection) => {
+            connection.config.queryFormat = bindParamLabels;
+            const formattedSql = connection.format(sql, values);
+
+            const rows = await queryWithConnection(connection, formattedSql, values);
+
+            connection.config.queryFormat = null;
+
+            return rows;
+        }, label);
+    }
+
+    async function isHealthy() {
         try {
-            await connection.commitPromise();
+            const rows = await pool.promise()
+                .query('SELECT 1', null);
+
+            if (!rows || rows.length === 0 || rows[0][1] !== 1) {
+                throw new Error('Response obtained from database was invalid');
+            }
+
+            return true;
         } catch (err) {
-            logger.error(`${outputLabel}.sql.commitFailure`, err);
-            connection.destroy();
+            logger.error(`${DEFAULT_OUTPUT_LABEL}.unhealthy`, { message: err.message });
             throw err;
         }
-
-        const duration = timers.stop(startToken);
-        logger.info(`${outputLabel}.query.complete`, { duration });
-        connection.release();
-
-        return queryResults;
-    }
-
-    function queryStream(sql, values = [], label) {
-        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
-        return new Promise((resolve, reject) => {
-            newConnection()
-                .then((connection) => {
-                    resolve([connection.query(sql, values), connection]);
-                })
-                .catch((err) => {
-                    logger.error(`${outputLabel}.sql`, err);
-                    reject(err);
-                });
-        });
-    }
-
-    function labelQuery(sql, values = [], label) {
-        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
-        return new Promise((resolve, reject) => {
-            const startToken = timers.start();
-            newConnection()
-                .then((connection) => {
-                    connection.config.queryFormat = bindParamLabels;
-                    const formattedSql = connection.format(sql, values);
-
-                    connection.query(formattedSql, values, (err, rows) => {
-                        const duration = timers.stop(startToken);
-                        if (err) {
-                            connection.destroy();
-                            logger.error(`${outputLabel}.sql`, err);
-                            return reject(err);
-                        }
-                        logger.info(`${outputLabel}.query.done`, {
-                            duration,
-                            count: rows.length,
-                        });
-
-                        // Since query format is set per connection and we have a pool of them,
-                        // we might end up reusing this connection with this query format in a
-                        // query that doesn't expect it.
-                        connection.config.queryFormat = null;
-                        releaseConnection(connection);
-                        return resolve(rows);
-                    });
-                })
-                .catch((err) => {
-                    logger.error(`${outputLabel}.sql`, err);
-                    reject(err);
-                });
-        });
-    }
-
-    function multiStmtQuery(sql, values, label, options = {}) {
-        if (poolOpts.multipleStatements !== true) {
-            return Promise.reject(new Error('This pool has not been initialised with "multipleStatements: true" as an option'));
-        }
-
-        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
-        return new Promise((resolve, reject) => {
-            newConnection()
-                .then((connection) => {
-                    if (options.paramLabels) {
-                        connection.config.queryFormat = bindParamLabels;
-                    }
-                    const queries = values.reduce((acc, row) => {
-                        if (row && Object.keys(row).length > 0) {
-                            return acc + connection.format(sql, row);
-                        }
-
-                        return acc;
-                    }, '');
-
-                    connection.query(queries, (err, rows) => {
-                        if (err) {
-                            connection.destroy();
-                            logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
-                            return reject(err);
-                        }
-
-                        if (options.paramLabels) {
-                            connection.config.queryFormat = null;
-                        }
-                        releaseConnection(connection);
-                        if (!Array.isArray(rows)) {
-                            return resolve([rows]);
-                        }
-
-                        return resolve(rows);
-                    });
-                })
-                .catch((err) => {
-                    logger.error(`${outputLabel}.multiStmtQuery`, { message: err });
-                    reject(err);
-                });
-        });
-    }
-
-    // TODO -- Use transactions? connection.beginTransaction ...
-    function bulkInsert(sql, values, label, options = {}) {
-        const outputLabel = label || DEFAULT_OUTPUT_LABEL;
-        return new Promise((resolve, reject) => {
-            newConnection()
-                .then((connection) => {
-                    if (options.asPreparedStatement) {
-                        connection.execute(sql, [values], (err) => {
-                            if (err) {
-                                logger.error(`${outputLabel}.bulkInsert`, err);
-                                connection.destroy();
-                                return reject(err);
-                            }
-                            releaseConnection(connection);
-                            return resolve(true);
-                        });
-                    } else {
-                        connection.query(sql, [values], (err) => {
-                            if (err) {
-                                logger.error(`${outputLabel}.bulkInsert`, err);
-                                connection.destroy();
-                                return reject(err);
-                            }
-                            releaseConnection(connection);
-                            return resolve(true);
-                        });
-                    }
-                })
-                .catch((err) => {
-                    logger.error(`${outputLabel}.bulkInsert`, err);
-                    reject(err);
-                });
-        });
-    }
-
-    function isHealthy() {
-        return new Promise((resolve, reject) => {
-            newConnection()
-                .then((connection) => {
-                    connection.query('SELECT 1', null, (err, rows) => {
-                        if (err) {
-                            logger.error('connector.DBConnection.unhealthy', { message: err.message });
-                            connection.destroy();
-                            return reject(err);
-                        }
-                        releaseConnection(connection);
-
-                        if (!rows || rows.length === 0 || rows[0][1] !== 1) {
-                            logger.error('connector.DBConnection.unhealthy', { message: 'Response obtained from database was invalid' });
-                            return reject();
-                        }
-
-                        return resolve(true);
-                    });
-                })
-                .catch((err) => {
-                    logger.error('connector.DBConnection.unhealthy', { message: err.message });
-                    reject(err);
-                });
-        });
     }
 
     return {
         query,
-        transactionQuery,
-        queryStream,
-        multiStmtQuery,
+        queryWithConnection,
+        withinConnection,
+        withinTransaction,
         labelQuery,
-        bulkInsert,
         isHealthy,
         escape: mysql.escape,
         escapeId: mysql.escapeId,
