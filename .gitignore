@@ -1,12 +1,8 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
-# testing
 coverage/
 .nyc_output/
-app/node_modules/.cache/
-
-# production
-/build
+node_modules/
 
 # misc
 .DS_Store
