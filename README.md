@@ -1,5 +1,13 @@
 # node-app-data-connectors
 
+## DEPRECATED
+
+Please use [node-app-mysql-connector](https://github.com/infinityworks/node-app-mysql-connector) for managing MySQL connections.
+
+Redis and HTTP connections are usually simple enough to not require lots of additional management logic, so just use the appropriate libraries directly. You can use the `wrappers` module within [node-app-base](https://github.com/infinityworks/node-app-base) to help manage log output.
+
+
+
 [![Build Status](https://travis-ci.org/infinityworks/node-app-data-connectors.svg?branch=master)](https://travis-ci.org/infinityworks/node-app-data-connectors)
 
 Collection of libraries to interface with external data sources. At the moment, the following sources are supported:
