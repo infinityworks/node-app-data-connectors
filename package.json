@@ -7,7 +7,7 @@
     "moment": "^2.22.2",
     "mysql2": "github:sidorares/node-mysql2#semver:^1.6.5",
     "node-app-base": "github:infinityworks/node-app-base#semver:^0.4.16",
-    "redis": "^2.8.0",
+    "redis": "^3.1.1",
     "request-promise": "^4.2.4"
   },
   "devDependencies": {
